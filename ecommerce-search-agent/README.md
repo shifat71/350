@@ -13,12 +13,13 @@ A modern, AI-powered search and recommendation backend for e-commerce platforms.
 - Dockerized for easy deployment
 
 ## Requirements
-- Python 3.13 or higher
+- Python 3.11 (strict requirement)
 - Docker and Docker Compose
 - OpenAI API key
 - PostgreSQL 15+
 - Redis 7+
 - ChromaDB latest
+- uv package manager (for dependency management)
 
 ## Project Structure
 ```
@@ -56,8 +57,15 @@ ecommerce-search-agent/
 
 3. **Install dependencies:**
    ```bash
-   # Install uv package manager
+   # Install uv package manager (if not already installed)
    curl -LsSf https://astral.sh/uv/install.sh | sh
+   
+   # Create and activate virtual environment
+   uv venv
+   source .venv/bin/activate  # On Unix/macOS
+   # or
+   .venv\Scripts\activate  # On Windows
+   
    # Install project dependencies
    uv pip install -r requirements.txt
    ```
@@ -76,6 +84,12 @@ ecommerce-search-agent/
 
 6. **Start the application:**
    ```bash
+   # Make sure you're in the virtual environment
+   source .venv/bin/activate  # On Unix/macOS
+   # or
+   .venv\Scripts\activate  # On Windows
+   
+   # Start the application
    uv run uvicorn src.main:app --host 0.0.0.0 --port 9000 --reload
    ```
 

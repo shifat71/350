@@ -1,3 +1,4 @@
+# Python 3.11 required
 # Core dependencies
 fastapi==0.104.0
 uvicorn==0.24.0
@@ -16,7 +17,7 @@ python-multipart==0.0.6
 httpx==0.25.0
 tenacity==8.2.3
 structlog==23.2.0
-uv==0.1.0  # Package manager
+uv==0.1.0  # Package manager (required)
 python-jose==3.3.0  # For JWT if needed
 passlib==1.7.4  # For password hashing if needed
 
