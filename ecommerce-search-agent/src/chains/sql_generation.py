@@ -14,7 +14,7 @@ logger = get_logger(__name__)
 SQL_GENERATION_PROMPT = """You are a SQL expert. Your task is to generate a SQL query based on the query understanding results.
 
 Database Schema:
-- products (id, name, description, price, image, "categoryId")
+- products (id, name, description, price, image, category_id)
 - categories (id, name)
 
 Rules:
@@ -22,9 +22,9 @@ Rules:
 2. Use ILIKE for case-insensitive text matching
 3. Always include ORDER BY clause
 4. Use proper table aliases (p for products, c for categories)
-5. Always join with categories table using p."categoryId" = c.id
+5. Always join with categories table using p.category_id = c.id
 6. Use proper column names with case sensitivity:
-   - p."categoryId" (not p.categoryId or p.category_id)
+   - p.category_id (not p.categoryId)
    - p.image (not p.image_url)
    - All other column names are lowercase
 7. ALWAYS use LIMIT 1 to return only one result
@@ -33,7 +33,7 @@ Example:
 Input: {{"category": "electronics", "features": ["wireless"], "price_range": {{"min": 100, "max": 500}}}}
 Output: SELECT p.id, p.name, p.description, p.price, p.image, c.name as category_name
 FROM products p
-JOIN categories c ON p."categoryId" = c.id
+JOIN categories c ON p.category_id = c.id
 WHERE c.name ILIKE :category_name
 AND p.description ILIKE :feature
 AND p.price BETWEEN :min_price AND :max_price
