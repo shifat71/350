@@ -1,0 +1,208 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id           String    @id @default(cuid())
+  name         String    @unique
+  description  String?
+  image        String
+  productCount Int       @default(0)
+  featured     Boolean   @default(false)
+  products     Product[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("categories")
+}
+
+model Product {
+  id            Int      @id @default(autoincrement())
+  name          String
+  price         Float
+  originalPrice Float?
+  image         String
+  images        String[] // Array of image URLs
+  rating        Float    @default(0)
+  reviews       Int      @default(0)
+  inStock       Boolean  @default(true)
+  stock         Int      @default(0)
+  description   String?
+  features      String[] // Array of feature strings
+  specifications Json?   // JSON object for key-value specifications
+  
+  categoryId    String
+  category      Category @relation(fields: [categoryId], references: [id])
+  
+  cartItems     CartItem[]
+  orderItems    OrderItem[]
+  productReviews Review[]
+  favorites     Favorite[]
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("products")
+}
+
+model User {
+  id                    String    @id @default(cuid())
+  email                 String    @unique
+  password              String
+  firstName             String
+  lastName              String
+  userType              UserType  @default(CUSTOMER)
+  avatar                String?
+  isEmailVerified       Boolean   @default(false)
+  emailVerificationToken String?  @unique
+  emailVerificationExpiry DateTime?
+  addresses             Address[]
+  orders                Order[]
+  cartItems             CartItem[]
+  reviews               Review[]
+  favorites             Favorite[]
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("users")
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  quantity  Int
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, productId])
+  @@map("cart_items")
+}
+
+model Address {
+  id        String      @id @default(cuid())
+  type      AddressType
+  firstName String
+  lastName  String
+  street    String
+  city      String
+  state     String
+  zipCode   String
+  country   String
+  isDefault Boolean     @default(false)
+  
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders    Order[]
+  
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@map("addresses")
+}
+
+model Order {
+  id         String      @id @default(cuid())
+  status     OrderStatus @default(PENDING)
+  subtotal   Float
+  tax        Float
+  shipping   Float
+  total      Float
+  items      OrderItem[]
+  
+  userId     String
+  user       User        @relation(fields: [userId], references: [id])
+  
+  addressId  String
+  address    Address     @relation(fields: [addressId], references: [id])
+  
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  quantity  Int
+  price     Float   // Price at time of order
+  
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("order_items")
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int      // 1-5 stars
+  title     String
+  comment   String
+  helpful   Int      @default(0)
+  verified  Boolean  @default(false) // True if user purchased the product
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, productId]) // One review per user per product
+  @@map("reviews")
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, productId]) // One favorite per user per product
+  @@map("favorites")
+}
+
+enum UserType {
+  CUSTOMER
+  ADMIN
+}
+
+enum AddressType {
+  SHIPPING
+  BILLING
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
