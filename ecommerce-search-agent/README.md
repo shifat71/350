@@ -2,6 +2,41 @@
 
 A modern, AI-powered search and recommendation backend for e-commerce platforms. Supports natural language, image+text, and vector-based product search, with fast caching and scalable architecture.
 
+## Requirements
+- Python 3.11 (strict requirement)
+- uv
+
+## Setting Up Python 3.11
+
+To ensure compatibility and avoid errors, you must use Python 3.11. Follow these steps:
+
+1. **Install Python 3.11** (if not already installed):
+   ```bash
+   sudo apt update
+   sudo apt install python3.11 python3.11-venv
+   ```
+
+2. **Create a virtual environment with Python 3.11**:
+   ```bash
+   python3.11 -m venv .venv
+   ```
+
+3. **Activate the virtual environment**:
+   ```bash
+   source .venv/bin/activate
+   ```
+
+4. **Verify Python version**:
+   ```bash
+   python --version
+   ```
+   Ensure it shows `Python 3.11.x`.
+
+5. **Install dependencies**:
+   ```bash
+   uv pip install -r requirements.txt
+   ```
+
 ## Features
 - Natural language product search (text)
 - Image+text product search (OpenAI Vision)
@@ -11,199 +46,6 @@ A modern, AI-powered search and recommendation backend for e-commerce platforms.
 - Caching for search and recommendations
 - Admin endpoint for rebuilding embeddings
 - Dockerized for easy deployment
-
-## Requirements
-- Python 3.11 (strict requirement)
-- Docker and Docker Compose
-- OpenAI API key
-- PostgreSQL 15+
-- Redis 7+
-- ChromaDB latest
-- uv package manager (for dependency management)
-
-## Project Structure
-```
-ecommerce-search-agent/
-├── src/
-│   ├── agents/           # Search, image, and recommendation agents
-│   ├── api/              # FastAPI routes and models
-│   ├── chains/           # Query understanding and SQL generation chains
-│   ├── database/         # DB models and clients
-│   ├── embeddings/       # Embedding generator and indexer
-│   ├── utils/            # Logging, validators, etc.
-│   └── main.py           # FastAPI app entry point
-├── scripts/              # Utility scripts (e.g., rebuild_embeddings.py)
-├── tests/                # Unit and integration tests
-├── Dockerfile
-├── docker-compose.yml
-├── pyproject.toml
-├── .env.example
-└── README.md
-```
-
-## Quick Start
-1. **Clone the repo:**
-   ```bash
-   git clone <repo-url>
-   cd ecommerce-search-agent
-   ```
-
-2. **Set up environment:**
-   ```bash
-   # Copy environment variables
-   cp .env.example .env
-   # Edit .env with your settings
-   ```
-
-3. **Install dependencies:**
-   ```bash
-   # Install uv package manager (if not already installed)
-   curl -LsSf https://astral.sh/uv/install.sh | sh
-   
-   # Create and activate virtual environment
-   uv venv
-   source .venv/bin/activate  # On Unix/macOS
-   # or
-   .venv\Scripts\activate  # On Windows
-   
-   # Install project dependencies
-   uv pip install -r requirements.txt
-   ```
-
-4. **Start services:**
-   ```bash
-   # Start all services
-   docker-compose up -d
-   ```
-
-5. **Initialize the database:**
-   ```bash
-   # Run database migrations
-   docker-compose exec app alembic upgrade head
-   ```
-
-6. **Start the application:**
-   ```bash
-   # Make sure you're in the virtual environment
-   source .venv/bin/activate  # On Unix/macOS
-   # or
-   .venv\Scripts\activate  # On Windows
-   
-   # Start the application
-   uv run uvicorn src.main:app --host 0.0.0.0 --port 9000 --reload
-   ```
-
-## API Documentation
-
-### Search Endpoints
-
-#### Text Search
-```http
-POST /search/text
-Content-Type: application/json
-
-{
-    "query": "red sporty watch with rubber strap"
-}
-```
-
-#### Image Search
-```http
-POST /search/image
-Content-Type: application/json
-
-{
-    "image_base64": "base64_encoded_image_data",
-    "query": "optional text query"
-}
-```
-
-#### Product Recommendations
-```http
-GET /recommendations/{product_id}
-```
-
-### Admin Endpoints
-
-#### Rebuild Embeddings
-```http
-POST /admin/rebuild-embeddings
-```
-
-## Development
-
-### Running Tests
-```bash
-# Run all tests
-pytest
-
-# Run with coverage
-pytest --cov=src tests/
-```
-
-### Code Quality
-```bash
-# Format code
-black .
-
-# Sort imports
-isort .
-
-# Lint code
-ruff check .
-
-# Type checking
-mypy src/
-```
-
-### Database Migrations
-```bash
-# Create new migration
-alembic revision --autogenerate -m "description"
-
-# Apply migrations
-alembic upgrade head
-```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Database Connection Issues**
-   - Check if PostgreSQL is running: `docker-compose ps`
-   - Verify connection settings in `.env`
-   - Check logs: `docker-compose logs postgres`
-
-2. **Redis Connection Issues**
-   - Verify Redis is running: `docker-compose ps`
-   - Check connection settings in `.env`
-   - Check logs: `docker-compose logs redis`
-
-3. **ChromaDB Issues**
-   - Ensure ChromaDB is running: `docker-compose ps`
-   - Check connection settings in `.env`
-   - Check logs: `docker-compose logs chromadb`
-
-4. **OpenAI API Issues**
-   - Verify API key in `.env`
-   - Check rate limits and quota
-   - Verify model availability
-
-### Logs
-- Application logs: `docker-compose logs app`
-- Database logs: `docker-compose logs postgres`
-- Redis logs: `docker-compose logs redis`
-- ChromaDB logs: `docker-compose logs chromadb`
-
-## Contributing
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-## License
-MIT 
 
 ## Running the Project with Docker Containers
 
@@ -235,7 +77,7 @@ This project uses Docker containers for PostgreSQL, ChromaDB, and Redis. Follow 
 
 3. **Update Your .env File**
 
-   Ensure your `.env` file contains the following configuration:
+   Ensure your `.env` file contains the following configuration. If the file does not exist, create it in the root directory of the project:
 
    ```
    APP_NAME=ecommerce-search-agent
@@ -271,12 +113,58 @@ This project uses Docker containers for PostgreSQL, ChromaDB, and Redis. Follow 
    RATE_LIMIT_WINDOW=3600
    ```
 
-4. **Start the FastAPI Application**
+4. **Managing Docker Containers**
 
-   Run the following command to start the FastAPI application:
+   If you need to stop or remove the Docker containers, you can use the following commands:
 
    ```bash
-   uv run uvicorn src.main:app --host 0.0.0.0 --port 9000 --reload
+   # Stop containers
+   docker stop postgres chromadb redis
+
+   # Remove containers
+   docker rm postgres chromadb redis
    ```
 
-   Your application should now be running and connected to the Docker containers. 
+5. **Testing the Application**
+
+   Once the application is running, you can test it by accessing the API endpoints. For example, to search for products, you can use:
+
+   ```bash
+   curl -X POST http://localhost:9000/search/text -H "Content-Type: application/json" -d '{"query": "headphones"}'
+   ```
+
+   This will return a list of products matching the search query.
+
+## Fast Setup & Troubleshooting
+
+### 1. Install dependencies (robust)
+```bash
+uv pip install -r requirements.txt
+```
+
+
+### 2. Clean up Docker containers (if ports are in use or containers already exist)
+```bash
+docker rm -f postgres chromadb redis || true
+```
+
+### 3. Start Docker containers
+```bash
+docker run -d --name postgres -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=postgres -p 5434:5432 postgres:latest
+docker run -d --name chromadb -p 8001:8000 chromadb/chroma:latest
+docker run -d --name redis -p 6380:6379 redis:latest
+```
+
+### 4. Seed the database
+```bash
+python run tests/seed_postgres.py
+```
+
+### 5. Start the FastAPI app
+```bash
+uv run uvicorn src.main:app --host 0.0.0.0 --port 9000 --reload
+```
+
+---
+
+If you encounter errors about missing dependencies, repeat step 1. If you see port conflicts, repeat step 2. 
