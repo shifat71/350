@@ -1,5 +1,37 @@
 // Type definitions for the e-commerce application
 
+export interface Category {
+  id: string;
+  name: string;
+  description?: string;
+  image: string;
+  productCount: number;
+  featured: boolean;
+  createdAt: string;
+  updatedAt: string;
+  products?: Product[];
+}
+
+export interface Product {
+  id: number;
+  name: string;
+  price: number;
+  originalPrice?: number;
+  image: string;
+  images: string[];
+  rating: number;
+  reviews: number;
+  inStock: boolean;
+  stock: number;
+  description?: string;
+  features: string[];
+  specifications?: Record<string, any>;
+  categoryId: string;
+  category?: Category;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -26,6 +58,55 @@ export interface Address {
   userId: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface OrderItem {
+  id: string;
+  quantity: number;
+  price: number;
+  productId: number;
+  orderId: string;
+  product?: Product;
+}
+
+export interface Order {
+  id: string;
+  status: OrderStatus;
+  total: number;
+  subtotal: number;
+  tax: number;
+  shipping: number;
+  userId: string;
+  shippingAddressId: string;
+  createdAt: string;
+  updatedAt: string;
+  items?: OrderItem[];
+  user?: User;
+  shippingAddress?: Address;
+}
+
+export enum OrderStatus {
+  PENDING = 'PENDING',
+  CONFIRMED = 'CONFIRMED',
+  PROCESSING = 'PROCESSING',
+  SHIPPED = 'SHIPPED',
+  DELIVERED = 'DELIVERED',
+  CANCELLED = 'CANCELLED'
+}
+
+// Cart types for frontend state management
+export interface CartItem {
+  id: string;
+  product: Product;
+  quantity: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Cart {
+  items: CartItem[];
+  total: number;
+  itemCount: number;
 }
 
 // Authentication types
@@ -61,4 +142,72 @@ export interface ApiResponse<T> {
   data: T;
   message?: string;
   success: boolean;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+  success: boolean;
+}
+
+// Query parameters for API calls
+export interface ProductQueryParams {
+  category?: string;
+  featured?: boolean;
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+
+export interface CategoryQueryParams {
+  featured?: boolean;
+  page?: number;
+  limit?: number;
+}
+
+export interface Review {
+  id: string;
+  productId: number;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  rating: number;
+  title: string;
+  comment: string;
+  helpful: number;
+  verified: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ReviewsResponse {
+  reviews: Review[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+  summary: {
+    averageRating: number;
+    totalReviews: number;
+    ratingDistribution: {
+      1: number;
+      2: number;
+      3: number;
+      4: number;
+      5: number;
+    };
+  };
+}
+
+export interface CreateReviewData {
+  rating: number;
+  title: string;
+  comment: string;
 }

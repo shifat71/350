@@ -206,7 +206,7 @@ export default function SignupPage() {
               Check Your Email!
             </h2>
             <p className="text-gray-600 mb-2">
-              We&apos;ve sent a verification link to:
+              We've sent a verification link to:
             </p>
             <p className="font-semibold text-indigo-600 mb-6">
               {registeredEmail}

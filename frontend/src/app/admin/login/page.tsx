@@ -21,8 +21,7 @@ export default function AdminLoginPage() {
     try {
       await login(formData.email, formData.password);
       router.push('/admin/dashboard');
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (_) {
+    } catch (error) {
       // Error is handled by the context
     } finally {
       setIsLoading(false);
