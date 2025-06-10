@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
+import { useHydration } from "@/hooks/useHydration";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -11,6 +12,7 @@ export default function Header() {
   const { getTotalItems, itemCount } = useCart();
   const { user, logout } = useAuth();
   const { favoritesCount } = useFavorites();
+  const isHydrated = useHydration();
 
   // Debug cart state changes
   useEffect(() => {
@@ -48,7 +50,7 @@ export default function Header() {
           <div className="hidden md:flex items-center space-x-4">
             <Link href="/favorites" className="text-gray-700 hover:text-gray-900 relative transition-colors">
               <HeartIcon className="h-6 w-6" />
-              {favoritesCount > 0 && (
+              {isHydrated && favoritesCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                   {favoritesCount}
                 </span>
@@ -56,7 +58,7 @@ export default function Header() {
             </Link>
             <Link href="/cart" className="text-gray-700 hover:text-gray-900 relative transition-colors">
               <ShoppingCartIcon className="h-6 w-6" />
-              {itemCount > 0 && (
+              {isHydrated && itemCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                   {itemCount}
                 </span>
@@ -180,7 +182,7 @@ export default function Header() {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <HeartIcon className="h-6 w-6" />
-                  {favoritesCount > 0 && (
+                  {isHydrated && favoritesCount > 0 && (
                     <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                       {favoritesCount}
                     </span>
@@ -192,7 +194,7 @@ export default function Header() {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <ShoppingCartIcon className="h-6 w-6" />
-                  {itemCount > 0 && (
+                  {isHydrated && itemCount > 0 && (
                     <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                       {itemCount}
                     </span>

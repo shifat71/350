@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { api } from '@/lib/api';
+import { useHydration } from '@/hooks/useHydration';
 import toast from 'react-hot-toast';
 
 interface AdminUser {
@@ -84,11 +85,13 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated: false
   });
 
-  // Check for existing admin token on mount - only on client side
+  const isHydrated = useHydration();
+
+  // Check for existing admin token on mount - only after hydration
   useEffect(() => {
     const checkAuth = async () => {
-      // SSR guard - only run on client side
-      if (typeof window === 'undefined') {
+      // Wait for hydration before accessing localStorage
+      if (!isHydrated) {
         dispatch({ type: 'SET_LOADING', payload: false });
         return;
       }
@@ -115,7 +118,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     };
 
     checkAuth();
-  }, []);
+  }, [isHydrated]);
 
   const login = async (email: string, password: string) => {
     dispatch({ type: 'LOGIN_START' });
@@ -125,8 +128,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       const response = await api.admin.login(email, password);
       console.log('AdminContext: Login response received', response);
       
-      // Only set localStorage and cookies on client side
-      if (typeof window !== 'undefined') {
+      // Only set localStorage and cookies after hydration
+      if (isHydrated) {
         localStorage.setItem('admin_token', response.token);
         // Also set cookie for middleware
         document.cookie = `adminToken=${response.token}; path=/; max-age=86400; SameSite=lax`;
@@ -149,8 +152,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
-    // Only access localStorage and cookies on client side
-    if (typeof window !== 'undefined') {
+    // Only access localStorage and cookies after hydration
+    if (isHydrated) {
       localStorage.removeItem('admin_token');
       // Clear the cookie
       document.cookie = 'adminToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
@@ -160,8 +163,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   };
 
   const refreshAdmin = async () => {
-    // SSR guard - only run on client side
-    if (typeof window === 'undefined') return;
+    // Wait for hydration before accessing localStorage
+    if (!isHydrated) return;
     
     const token = localStorage.getItem('admin_token');
     if (token) {

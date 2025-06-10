@@ -114,7 +114,7 @@ export default function CheckoutModal({ isOpen, onClose, total }: CheckoutModalP
         }
       };
 
-      const response = await api.orders.createWithCheckout(token, orderData);
+      await api.orders.createWithCheckout(token, orderData);
       
       // Clear cart after successful order
       await clearCart();

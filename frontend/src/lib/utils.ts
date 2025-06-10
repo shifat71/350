@@ -73,14 +73,8 @@ export function calculateShipping(subtotal: number, freeShippingThreshold: numbe
 }
 
 export function generateOrderId(): string {
-  // For SSR compatibility, we should avoid using Date.now() and Math.random()
-  // Instead, let the server generate this, or use a more predictable approach
-  if (typeof window === 'undefined') {
-    // On server side, return a placeholder that should be replaced by server logic
-    return 'ORD-SERVER-GENERATED';
-  }
-  
-  // On client side, use timestamp + random for uniqueness
+  // Always use Date.now() for consistency between server and client
+  // The server should handle actual order ID generation in a production environment
   const timestamp = Date.now().toString(36);
   const randomStr = Math.random().toString(36).substring(2, 8);
   return `ORD-${timestamp}-${randomStr}`.toUpperCase();

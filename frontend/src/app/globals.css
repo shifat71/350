@@ -20,7 +20,8 @@
   --ring: #2563eb;
 }
 
-@media (prefers-color-scheme: dark) {
+/* Disable automatic dark theme - force light theme */
+/* @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
@@ -40,7 +41,7 @@
     --input: #1f2937;
     --ring: #3b82f6;
   }
-}
+} */
 
 body {
   background: var(--background);

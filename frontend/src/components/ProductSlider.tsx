@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import ProductCard from './ProductCard';
 import { Product } from '@/types';
+import { useHydration } from '@/hooks/useHydration';
 
 interface ProductSliderProps {
   products: { id: string; product: Product }[] | Product[];
@@ -24,6 +25,7 @@ export default function ProductSlider({
   const [touchEnd, setTouchEnd] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const sliderRef = useRef<HTMLDivElement>(null);
+  const isHydrated = useHydration();
 
   // Normalize products data - handle both formats
   const normalizedProducts = products.map(item => 
@@ -32,6 +34,9 @@ export default function ProductSlider({
 
   // Responsive items per view
   useEffect(() => {
+    // Only run after hydration to avoid SSR mismatch
+    if (!isHydrated) return;
+
     const updateVisibleItems = () => {
       const width = window.innerWidth;
       if (width < 640) {
@@ -48,7 +53,7 @@ export default function ProductSlider({
     updateVisibleItems();
     window.addEventListener('resize', updateVisibleItems);
     return () => window.removeEventListener('resize', updateVisibleItems);
-  }, [itemsPerView]);
+  }, [itemsPerView, isHydrated]);
 
   const maxIndex = Math.max(0, normalizedProducts.length - visibleItems);
   
@@ -91,7 +96,7 @@ export default function ProductSlider({
 
   // Auto-play functionality (optional)
   useEffect(() => {
-    if (normalizedProducts.length <= visibleItems || isPaused) return;
+    if (normalizedProducts.length <= visibleItems || isPaused || !isHydrated) return;
     
     const interval = setInterval(() => {
       setCurrentIndex(prev => {
@@ -103,10 +108,13 @@ export default function ProductSlider({
     }, 5000); // Auto-advance every 5 seconds
 
     return () => clearInterval(interval);
-  }, [maxIndex, normalizedProducts.length, visibleItems, isPaused]);
+  }, [maxIndex, normalizedProducts.length, visibleItems, isPaused, isHydrated]);
 
   // Keyboard navigation
   useEffect(() => {
+    // Only run after hydration to avoid SSR mismatch
+    if (!isHydrated) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') {
         e.preventDefault();
@@ -119,7 +127,7 @@ export default function ProductSlider({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [currentIndex, maxIndex]);
+  }, [currentIndex, maxIndex, isHydrated]);
 
   if (normalizedProducts.length === 0) {
     return null;

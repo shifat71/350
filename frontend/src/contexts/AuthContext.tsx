@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { AuthUser, LoginCredentials, RegisterData } from '@/types';
+import { useHydration } from '@/hooks/useHydration';
 import toast from 'react-hot-toast';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
@@ -81,11 +82,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated: false
   });
 
-  // Check for existing token on mount - only on client side
+  const isHydrated = useHydration();
+
+  // Check for existing token on mount - only after hydration
   useEffect(() => {
     const checkAuth = async () => {
-      // SSR guard - only run on client side
-      if (typeof window === 'undefined') {
+      // Wait for hydration before accessing localStorage
+      if (!isHydrated) {
         dispatch({ type: 'SET_LOADING', payload: false });
         return;
       }
@@ -120,7 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     checkAuth();
-  }, []);
+  }, [isHydrated]);
 
   const login = async (credentials: LoginCredentials) => {
     dispatch({ type: 'LOGIN_START' });
@@ -137,8 +140,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await response.json();
 
       if (response.ok) {
-        // Only set localStorage on client side
-        if (typeof window !== 'undefined') {
+        // Only set localStorage after hydration
+        if (isHydrated) {
           localStorage.setItem('auth_token', data.token);
         }
         dispatch({ 
@@ -207,8 +210,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
-    // Only access localStorage on client side
-    if (typeof window !== 'undefined') {
+    // Only access localStorage after hydration
+    if (isHydrated) {
       localStorage.removeItem('auth_token');
     }
     dispatch({ type: 'LOGOUT' });
@@ -216,8 +219,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const refreshUser = async () => {
-    // SSR guard - only run on client side
-    if (typeof window === 'undefined') return;
+    // Wait for hydration before accessing localStorage
+    if (!isHydrated) return;
     
     const token = localStorage.getItem('auth_token');
     if (token) {

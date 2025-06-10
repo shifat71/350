@@ -4,6 +4,7 @@ import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { Product, CartItem } from '@/types';
 import { useAuth } from './AuthContext';
 import { useProduct } from './ProductContext';
+import { useHydration } from '@/hooks/useHydration';
 import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
 
@@ -124,6 +125,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const { token, isAuthenticated } = useAuth();
   const { refreshAllProducts } = useProduct();
+  const isHydrated = useHydration();
 
   // Define all functions first before useEffect
   const loadCart = async () => {
@@ -141,8 +143,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const loadLocalCart = () => {
     try {
-      // SSR guard - only run on client side
-      if (typeof window === 'undefined') {
+      // Only run after hydration
+      if (!isHydrated) {
         dispatch({ type: 'SET_LOADING', payload: false });
         return;
       }
@@ -164,8 +166,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (!isAuthenticated || !token) return;
     
     try {
-      // SSR guard - only run on client side
-      if (typeof window === 'undefined') return;
+      // Only run after hydration
+      if (!isHydrated) return;
 
       // Migrate existing cart items
       const savedCart = localStorage.getItem('cart');
@@ -221,18 +223,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Initialize cart on mount and handle auth changes
   useEffect(() => {
     const initializeCart = async () => {
-      console.log('🔄 CartContext: Initializing cart', { isAuthenticated, token: !!token });
+      console.log('🔄 CartContext: Initializing cart', { isAuthenticated, token: !!token, isHydrated });
+      
+      // Wait for hydration before accessing localStorage
+      if (!isHydrated) {
+        dispatch({ type: 'SET_LOADING', payload: false });
+        return;
+      }
       
       // Set loading state
       dispatch({ type: 'SET_LOADING', payload: true });
       
       if (isAuthenticated && token) {
-        // SSR guard - only run on client side
-        if (typeof window === 'undefined') {
-          dispatch({ type: 'SET_LOADING', payload: false });
-          return;
-        }
-
         // Check if there's a local cart or pending cart to migrate
         const savedCart = localStorage.getItem('cart');
         const pendingCart = localStorage.getItem('pendingCart');
@@ -257,15 +259,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     };
 
     initializeCart();
-  }, [isAuthenticated, token]);
+  }, [isAuthenticated, token, isHydrated]);
 
   // Handle initial mount with proper auth state detection
   useEffect(() => {
     const initOnMount = async () => {
       console.log('🚀 CartContext: Initial mount - checking auth state');
       
-      // SSR guard - only run on client side
-      if (typeof window === 'undefined') return;
+      // Wait for hydration before accessing localStorage
+      if (!isHydrated) return;
       
       // Check if we have a token in localStorage (page reload scenario)
       const storedToken = localStorage.getItem('auth_token');
@@ -285,12 +287,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     };
 
     initOnMount();
-  }, []);
+  }, [isHydrated]);
 
   // Save to localStorage for non-authenticated users
   useEffect(() => {
-    // SSR guard - only run on client side
-    if (typeof window === 'undefined') return;
+    // Only run after hydration
+    if (!isHydrated) return;
 
     if (!isAuthenticated && state.items.length > 0) {
       console.log('💾 CartContext: Saving cart to localStorage', { itemCount: state.items.length });
@@ -303,7 +305,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem('cart');
       }
     }
-  }, [state.items, isAuthenticated]);
+  }, [state.items, isAuthenticated, isHydrated]);
 
   const addToCart = async (product: Product, quantity: number = 1) => {
     console.log('🛒 CartContext: addToCart called', { 
