@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { HeartIcon, StarIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartIconSolid } from "@heroicons/react/24/solid";
 import { useRouter } from "next/navigation";
@@ -134,9 +135,11 @@ export default function ProductCard({ product }: ProductCardProps) {
         )}
         
         {/* Product Name */}
-        <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 min-h-[3.5rem]">
-          {product.name}
-        </h3>
+        <Link href={`/products/${product.id}`}>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 min-h-[3.5rem] hover:text-blue-600 transition-colors cursor-pointer">
+            {product.name}
+          </h3>
+        </Link>
         
         {/* Rating */}
         <div className="flex items-center mb-3">
