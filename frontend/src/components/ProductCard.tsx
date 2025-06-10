@@ -79,26 +79,26 @@ export default function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col">
-      <div className="relative h-64 flex-shrink-0">
+    <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 h-full flex flex-col group hover:scale-[1.02]">
+      <div className="relative h-64 flex-shrink-0 overflow-hidden">
         <Image
           src={product.image}
           alt={product.name}
           fill
-          className="object-cover"
+          className="object-cover group-hover:scale-105 transition-transform duration-300"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
         />
         
         {/* Sale Badge */}
         {product.originalPrice && (
-          <div className="absolute top-4 left-4 bg-red-500 text-white px-2 py-1 rounded text-sm font-semibold">
+          <div className="absolute top-4 left-4 bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
             Sale
           </div>
         )}
         
         {/* Out of Stock Overlay */}
         {product.inStock === false && (
-          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center backdrop-blur-sm">
             <span className="text-white font-semibold text-lg">Out of Stock</span>
           </div>
         )}
@@ -107,7 +107,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <button 
           onClick={handleToggleWishlist}
           disabled={isLoading}
-          className="absolute top-4 right-4 bg-white p-2 rounded-full shadow-md hover:bg-gray-50 transition-colors disabled:opacity-50"
+          className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm p-2.5 rounded-full shadow-lg hover:bg-white transition-all duration-200 disabled:opacity-50 hover:scale-110"
         >
           {isFavoriteStable ? (
             <HeartIconSolid className="h-5 w-5 text-red-500" />
@@ -170,10 +170,10 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
           <button 
             onClick={handleAddToCart}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
+            className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 whitespace-nowrap ${
               product.inStock !== false
-                ? "bg-blue-600 text-white hover:bg-blue-700" 
-                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transform hover:scale-105" 
+                : "bg-gray-200 text-gray-500 cursor-not-allowed"
             }`}
             disabled={product.inStock === false}
           >
