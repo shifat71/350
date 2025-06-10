@@ -94,19 +94,19 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         {!isRegistered ? (
           <>
             <div>
-              <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+              <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
                 Create your account
               </h2>
-              <p className="mt-2 text-center text-sm text-gray-600">
+              <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
                 Or{' '}
                 <Link
                   href={`/login${redirect !== '/' ? `?redirect=${encodeURIComponent(redirect)}` : ''}`}
-                  className="font-medium text-indigo-600 hover:text-indigo-500"
+                  className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
                 >
                   sign in to your existing account
                 </Link>
@@ -115,7 +115,7 @@ export default function SignupPage() {
             <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Full Name
                   </label>
                   <input
@@ -124,14 +124,14 @@ export default function SignupPage() {
                     type="text"
                     autoComplete="name"
                     required
-                    className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                    className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                     placeholder="Enter your full name"
                     value={formData.name}
                     onChange={handleChange}
                   />
                 </div>
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Email Address
                   </label>
                   <input
@@ -140,14 +140,14 @@ export default function SignupPage() {
                     type="email"
                     autoComplete="email"
                     required
-                    className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                    className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                     placeholder="Enter your email address"
                     value={formData.email}
                     onChange={handleChange}
                   />
                 </div>
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Password
                   </label>
                   <input
@@ -156,14 +156,14 @@ export default function SignupPage() {
                     type="password"
                     autoComplete="new-password"
                     required
-                    className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                    className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                     placeholder="Enter your password (min 6 characters)"
                     value={formData.password}
                     onChange={handleChange}
                   />
                 </div>
                 <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Confirm Password
                   </label>
                   <input
@@ -172,7 +172,7 @@ export default function SignupPage() {
                     type="password"
                     autoComplete="new-password"
                     required
-                    className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                    className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                     placeholder="Confirm your password"
                     value={formData.confirmPassword}
                     onChange={handleChange}
@@ -181,14 +181,14 @@ export default function SignupPage() {
               </div>
 
               {error && (
-                <div className="text-red-600 text-sm text-center">{error}</div>
+                <div className="text-red-600 dark:text-red-400 text-sm text-center">{error}</div>
               )}
 
               <div>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? 'Creating account...' : 'Create account'}
                 </button>
@@ -197,22 +197,22 @@ export default function SignupPage() {
           </>
         ) : (
           <div className="text-center">
-            <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
-              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-16 h-16 mx-auto mb-4 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               Check Your Email!
             </h2>
-            <p className="text-gray-600 mb-2">
+            <p className="text-gray-600 dark:text-gray-400 mb-2">
               We've sent a verification link to:
             </p>
-            <p className="font-semibold text-indigo-600 mb-6">
+            <p className="font-semibold text-indigo-600 dark:text-indigo-400 mb-6">
               {registeredEmail}
             </p>
-            <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
-              <p className="text-sm text-blue-800">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-4 mb-6">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
                 <strong>Important:</strong> You must verify your email address before you can log in to your account. 
                 The verification link will expire in 24 hours.
               </p>
@@ -220,16 +220,16 @@ export default function SignupPage() {
             <div className="space-y-3">
               <button
                 onClick={handleResendVerification}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
                 Resend Verification Email
               </button>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 Didn&apos;t receive the email? Check your spam folder or try resending.
               </p>
               <Link
                 href="/login"
-                className="block text-center text-sm text-indigo-600 hover:text-indigo-500"
+                className="block text-center text-sm text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
               >
                 Already verified? Sign in here
               </Link>

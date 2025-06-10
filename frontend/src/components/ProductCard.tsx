@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
+import { useProduct } from "@/contexts/ProductContext";
 import { Product } from "@/types";
 import toast from 'react-hot-toast';
 
@@ -17,6 +18,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { isAuthenticated } = useAuth();
   const { addToCart } = useCart();
   const { isStableFavorite, toggleFavorite, isLoading } = useFavorites();
+  const { getUpdatedProduct } = useProduct();
   const router = useRouter();
 
   const isFavoriteStable = isStableFavorite(product.id);
@@ -57,6 +59,13 @@ export default function ProductCard({ product }: ProductCardProps) {
     }
     
     try {
+      // Check for updated stock before adding to cart
+      const updatedProduct = await getUpdatedProduct(product.id);
+      if (updatedProduct && !updatedProduct.inStock) {
+        toast.error('This product is now out of stock');
+        return;
+      }
+      
       await addToCart(product, 1);
     } catch (error) {
       console.error('Error adding to cart:', error);

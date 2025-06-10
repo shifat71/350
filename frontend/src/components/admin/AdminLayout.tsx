@@ -1,10 +1,11 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAdmin } from '@/contexts/AdminContext';
 import Link from 'next/link';
 import { useHydration } from '@/hooks/useHydration';
+import { api } from '@/lib/api';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -14,6 +15,27 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const { user, logout } = useAdmin();
   const router = useRouter();
   const isHydrated = useHydration();
+  const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
+
+  // Fetch pending orders count
+  useEffect(() => {
+    if (user) {
+      const fetchPendingOrders = async () => {
+        try {
+          const params = new URLSearchParams({ status: 'PENDING', limit: '1' });
+          const response = await api.getOrders(params);
+          setPendingOrdersCount(response.pagination.total);
+        } catch (error) {
+          console.error('Failed to fetch pending orders count:', error);
+        }
+      };
+      
+      fetchPendingOrders();
+      // Refresh every 30 seconds
+      const interval = setInterval(fetchPendingOrders, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
 
   const handleLogout = async () => {
     await logout();
@@ -96,6 +118,22 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>
                   Products
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/admin/orders"
+                  className="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors relative"
+                >
+                  <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Orders
+                  {pendingOrdersCount > 0 && (
+                    <span className="absolute top-1 right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
+                      {pendingOrdersCount}
+                    </span>
+                  )}
                 </Link>
               </li>
               <li>

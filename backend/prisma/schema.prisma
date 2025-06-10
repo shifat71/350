@@ -115,22 +115,23 @@ model Address {
 }
 
 model Order {
-  id         String      @id @default(cuid())
-  status     OrderStatus @default(PENDING)
-  subtotal   Float
-  tax        Float
-  shipping   Float
-  total      Float
-  items      OrderItem[]
+  id           String      @id @default(cuid())
+  status       OrderStatus @default(PENDING)
+  subtotal     Float
+  tax          Float
+  shipping     Float
+  total        Float
+  customerInfo Json?       // Store customer information from checkout
+  items        OrderItem[]
   
-  userId     String
-  user       User        @relation(fields: [userId], references: [id])
+  userId       String
+  user         User        @relation(fields: [userId], references: [id])
   
-  addressId  String
-  address    Address     @relation(fields: [addressId], references: [id])
+  addressId    String
+  address      Address     @relation(fields: [addressId], references: [id])
   
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
   @@map("orders")
 }
@@ -200,9 +201,11 @@ enum AddressType {
 }
 
 enum OrderStatus {
-  PENDING
-  PROCESSING
-  SHIPPED
-  DELIVERED
-  CANCELLED
+  PENDING        // Waiting for admin approval
+  APPROVED       // Approved by admin, ready for processing
+  REJECTED       // Rejected by admin
+  PROCESSING     // Being processed
+  SHIPPED        // Shipped to customer
+  DELIVERED      // Delivered to customer
+  CANCELLED      // Cancelled
 }

@@ -6,6 +6,7 @@ import { HeartIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import { useFavorites } from '@/contexts/FavoritesContext';
+import { useProduct } from '@/contexts/ProductContext';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import api from '@/lib/api';
@@ -18,6 +19,7 @@ export default function ProductPage() {
   const { user, token } = useAuth();
   const { addToCart } = useCart();
   const { toggleFavorite, isFavorite } = useFavorites();
+  const { invalidateProductCache } = useProduct();
   
   const [product, setProduct] = useState<Product | null>(null);
   const [reviews, setReviews] = useState<ReviewsResponse | null>(null);
@@ -45,12 +47,14 @@ export default function ProductPage() {
       setLoading(true);
       const data = await api.getProduct(productId);
       setProduct(data);
+      // Update product cache
+      invalidateProductCache(productId);
     } catch (error) {
       console.error('Error fetching product:', error);
     } finally {
       setLoading(false);
     }
-  }, [productId]);
+  }, [productId, invalidateProductCache]);
 
   const fetchReviews = useCallback(async () => {
     try {
@@ -129,8 +133,8 @@ export default function ProductPage() {
       setReviewForm({ rating: 5, title: '', comment: '' });
       setShowReviewForm(false);
       
-      // Refresh reviews
-      await fetchReviews();
+      // Refresh both reviews and product data to get updated rating/review count
+      await Promise.all([fetchReviews(), fetchProduct()]);
       
       toast.success('Review submitted successfully!');
     } catch (error) {

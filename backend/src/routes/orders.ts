@@ -247,4 +247,156 @@ router.post('/create', authenticateUser, async (req: Request, res: Response) => 
   }
 });
 
+// Create order with checkout information
+router.post('/create-checkout', authenticateUser, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const { customerInfo, shippingAddress } = req.body;
+
+    if (!customerInfo || !shippingAddress) {
+      return res.status(400).json({ error: 'Customer information and shipping address are required' });
+    }
+
+    // Get user's cart items
+    const cartItems = await prisma.cartItem.findMany({
+      where: { userId },
+      include: {
+        product: true
+      }
+    });
+
+    if (cartItems.length === 0) {
+      return res.status(400).json({ error: 'Cart is empty' });
+    }
+
+    // Check if all items are still in stock
+    for (const item of cartItems) {
+      if (!item.product.inStock) {
+        return res.status(400).json({ 
+          error: `${item.product.name} is out of stock` 
+        });
+      }
+      if (item.quantity > item.product.stock) {
+        return res.status(400).json({ 
+          error: `Only ${item.product.stock} units of ${item.product.name} available` 
+        });
+      }
+    }
+
+    // Calculate totals
+    const subtotal = cartItems.reduce((sum, item) => 
+      sum + (item.product.price * item.quantity), 0
+    );
+    
+    const shipping = subtotal >= 50 ? 0 : 5.99; // Free shipping over $50
+    const tax = subtotal * 0.08; // 8% tax rate
+    const total = subtotal + shipping + tax;
+
+    // Create order with transaction
+    const order = await prisma.$transaction(async (tx) => {
+      // Create or find address
+      let address = await tx.address.findFirst({
+        where: {
+          userId,
+          street: shippingAddress.street,
+          city: shippingAddress.city,
+          state: shippingAddress.state,
+          zipCode: shippingAddress.zipCode,
+          country: shippingAddress.country
+        }
+      });
+
+      if (!address) {
+        address = await tx.address.create({
+          data: {
+            userId,
+            type: 'SHIPPING',
+            firstName: shippingAddress.firstName,
+            lastName: shippingAddress.lastName,
+            street: shippingAddress.street,
+            city: shippingAddress.city,
+            state: shippingAddress.state,
+            zipCode: shippingAddress.zipCode,
+            country: shippingAddress.country,
+            isDefault: false
+          }
+        });
+      }
+
+      // Create the order with PENDING status (waiting for admin approval)
+      const newOrder = await tx.order.create({
+        data: {
+          userId,
+          addressId: address.id,
+          subtotal,
+          tax,
+          shipping,
+          total,
+          status: 'PENDING', // Will need admin approval
+          customerInfo: customerInfo // Store customer info as JSON
+        }
+      });
+
+      // Create order items
+      await Promise.all(
+        cartItems.map(item =>
+          tx.orderItem.create({
+            data: {
+              orderId: newOrder.id,
+              productId: item.productId,
+              quantity: item.quantity,
+              price: item.product.price // Store price at time of order
+            }
+          })
+        )
+      );
+
+      // Clear user's cart
+      await tx.cartItem.deleteMany({
+        where: { userId }
+      });
+
+      return newOrder;
+    });
+
+    // Fetch complete order with details
+    const completeOrder = await prisma.order.findUnique({
+      where: { id: order.id },
+      include: {
+        items: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                name: true,
+                image: true,
+                price: true
+              }
+            }
+          }
+        },
+        address: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true
+          }
+        }
+      }
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Order created successfully and sent for admin approval',
+      order: completeOrder
+    });
+
+  } catch (error) {
+    console.error('Create checkout order error:', error);
+    res.status(500).json({ error: 'Failed to create order' });
+  }
+});
+
 export default router;

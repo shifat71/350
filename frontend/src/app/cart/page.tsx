@@ -5,26 +5,29 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { TrashIcon, MinusIcon, PlusIcon, ShoppingBagIcon } from '@heroicons/react/24/outline';
 import { useCart } from '@/contexts/CartContext';
+import { useProduct } from '@/contexts/ProductContext';
 import { formatPrice } from '@/lib/utils';
+import CheckoutModal from '@/components/CheckoutModal';
 
 export default function CartPage() {
   const { items, updateQuantity, removeFromCart, total, getTotalItems } = useCart();
+  const { refreshAllProducts } = useProduct();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleUpdateQuantity = (productId: number, newQuantity: number) => {
+  const handleUpdateQuantity = async (productId: number, newQuantity: number) => {
     if (newQuantity <= 0) {
-      removeFromCart(productId);
+      await removeFromCart(productId);
     } else {
-      updateQuantity(productId, newQuantity);
+      await updateQuantity(productId, newQuantity);
     }
+    // Refresh products to show updated stock after cart changes
+    refreshAllProducts();
   };
 
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+
   const handleCheckout = async () => {
-    setIsLoading(true);
-    // Simulate checkout process
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    alert('Checkout functionality coming soon!');
-    setIsLoading(false);
+    setShowCheckoutModal(true);
   };
 
   if (items.length === 0) {
@@ -34,7 +37,7 @@ export default function CartPage() {
           <ShoppingBagIcon className="h-24 w-24 text-gray-300 mx-auto mb-6" />
           <h1 className="text-3xl font-bold text-gray-900 mb-4">Your cart is empty</h1>
           <p className="text-gray-600 mb-8">
-            Looks like you haven't added any items to your cart yet.
+            Looks like you haven&apos;t added any items to your cart yet.
           </p>
           <Link
             href="/products"
@@ -177,6 +180,13 @@ export default function CartPage() {
       </div>
 
       {/* Recommended Products */}
+      
+      {/* Checkout Modal */}
+      <CheckoutModal 
+        isOpen={showCheckoutModal}
+        onClose={() => setShowCheckoutModal(false)}
+        total={total}
+      />
       <div className="mt-12">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">You might also like</h2>
         <div className="bg-white rounded-lg shadow-md p-6">

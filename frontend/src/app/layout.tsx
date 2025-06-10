@@ -5,6 +5,7 @@ import { CartProvider } from "@/contexts/CartContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AdminProvider } from "@/contexts/AdminContext";
 import { FavoritesProvider } from "@/contexts/FavoritesContext";
+import { ProductProvider } from "@/contexts/ProductContext";
 import { Toaster } from "react-hot-toast";
 
 const geistSans = Geist({
@@ -35,19 +36,21 @@ export default function RootLayout({
         <AuthProvider>
           <AdminProvider>
             <FavoritesProvider>
-              <CartProvider>
-                {children}
-                <Toaster 
-                  position="top-right"
-                  toastOptions={{
-                    duration: 3000,
-                    style: {
-                      background: '#363636',
-                      color: '#fff',
-                    },
-                  }}
-                />
-              </CartProvider>
+              <ProductProvider>
+                <CartProvider>
+                  {children}
+                  <Toaster 
+                    position="top-right"
+                    toastOptions={{
+                      duration: 3000,
+                      style: {
+                        background: '#363636',
+                        color: '#fff',
+                      },
+                    }}
+                  />
+                </CartProvider>
+              </ProductProvider>
             </FavoritesProvider>
           </AdminProvider>
         </AuthProvider>

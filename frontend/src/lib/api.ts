@@ -225,6 +225,38 @@ export const api = {
       }
       return response.json();
     },
+
+    createWithCheckout: async (token: string, orderData: {
+      customerInfo: {
+        firstName: string;
+        lastName: string;
+        email: string;
+        mobile: string;
+      };
+      shippingAddress: {
+        firstName: string;
+        lastName: string;
+        street: string;
+        city: string;
+        state: string;
+        zipCode: string;
+        country: string;
+      };
+    }) => {
+      const response = await fetch(`${API_BASE_URL}/orders/create-checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(orderData),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create order');
+      }
+      return response.json();
+    },
   },
 
   // Reviews
@@ -489,6 +521,73 @@ export const api = {
         throw new Error(error.error || 'Failed to delete product');
       }
     },
+
+    // Orders
+    getOrders: async (token: string, params?: {
+      status?: string;
+      page?: number;
+      limit?: number;
+    }) => {
+      const searchParams = new URLSearchParams();
+      if (params?.status) searchParams.append('status', params.status);
+      if (params?.page) searchParams.append('page', params.page.toString());
+      if (params?.limit) searchParams.append('limit', params.limit.toString());
+
+      const response = await fetch(`${API_BASE_URL}/admin/orders?${searchParams}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch orders');
+      return response.json();
+    },
+
+    approveOrder: async (token: string, orderId: string) => {
+      const response = await fetch(`${API_BASE_URL}/admin/orders/${orderId}/approve`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) throw new Error('Failed to approve order');
+      return response.json();
+    },
+
+    rejectOrder: async (token: string, orderId: string, reason?: string) => {
+      const response = await fetch(`${API_BASE_URL}/admin/orders/${orderId}/reject`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ reason }),
+      });
+      if (!response.ok) throw new Error('Failed to reject order');
+      return response.json();
+    },
+
+    updateOrderStatus: async (token: string, orderId: string, status: string) => {
+      const response = await fetch(`${API_BASE_URL}/admin/orders/${orderId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status }),
+      });
+      if (!response.ok) throw new Error('Failed to update order status');
+      return response.json();
+    },
+
+    getSalesStats: async (token: string) => {
+      const response = await fetch(`${API_BASE_URL}/admin/analytics/sales`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch sales stats');
+      return response.json();
+    },
   },
 
   // Upload API
@@ -550,6 +649,109 @@ export const api = {
       
       return response.json();
     },
+  },
+
+  // Order Management (Admin)
+  getOrders: async (params?: URLSearchParams) => {
+    const token = localStorage.getItem('admin_token');
+    if (!token) {
+      throw new Error('Admin authentication required');
+    }
+    
+    const url = `${API_BASE_URL}/admin/orders${params ? `?${params.toString()}` : ''}`;
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('getOrders failed:', { status: response.status, error: errorText });
+      if (response.status === 401) {
+        throw new Error('Admin authentication required. Please login again.');
+      }
+      throw new Error('Failed to fetch orders');
+    }
+    return response.json();
+  },
+
+  approveOrder: async (orderId: string) => {
+    const token = localStorage.getItem('admin_token');
+    if (!token) {
+      throw new Error('Admin authentication required');
+    }
+    
+    const response = await fetch(`${API_BASE_URL}/admin/orders/${orderId}/approve`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      if (response.status === 401) {
+        throw new Error('Admin authentication required. Please login again.');
+      }
+      throw new Error(error.error || 'Failed to approve order');
+    }
+    return response.json();
+  },
+
+  rejectOrder: async (orderId: string, reason?: string) => {
+    const token = localStorage.getItem('admin_token');
+    const response = await fetch(`${API_BASE_URL}/admin/orders/${orderId}/reject`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ reason }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to reject order');
+    }
+    return response.json();
+  },
+
+  updateOrderStatus: async (orderId: string, status: string) => {
+    const token = localStorage.getItem('admin_token');
+    const response = await fetch(`${API_BASE_URL}/admin/orders/${orderId}/status`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ status }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to update order status');
+    }
+    return response.json();
+  },
+
+  getSalesStats: async () => {
+    const token = localStorage.getItem('admin_token');
+    if (!token) {
+      throw new Error('Admin authentication required');
+    }
+    
+    const response = await fetch(`${API_BASE_URL}/admin/analytics/sales`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Admin authentication required. Please login again.');
+      }
+      throw new Error('Failed to fetch sales stats');
+    }
+    return response.json();
   },
 
   // Favorites

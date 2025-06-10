@@ -7,6 +7,7 @@ import MultipleImageUpload from '@/components/MultipleImageUpload';
 import api from '@/lib/api';
 import { Product, Category } from '@/types';
 import { useAdmin } from '@/contexts/AdminContext';
+import { useProduct } from '@/contexts/ProductContext';
 import toast from 'react-hot-toast';
 
 interface ProductFormData {
@@ -23,6 +24,7 @@ interface ProductFormData {
 
 export default function AdminProducts() {
   const { token } = useAdmin();
+  const { invalidateProductCache, refreshAllProducts } = useProduct();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -121,6 +123,10 @@ export default function AdminProducts() {
         toast.success('Product created successfully');
       }
       
+      // Invalidate product cache to refresh all frontend components
+      invalidateProductCache();
+      refreshAllProducts();
+      
       await fetchData();
       resetForm();
     } catch (error) {
@@ -157,6 +163,11 @@ export default function AdminProducts() {
       }
       
       toast.success('Product deleted successfully');
+      
+      // Invalidate product cache to refresh all frontend components
+      invalidateProductCache();
+      refreshAllProducts();
+      
       await fetchData();
     } catch (error) {
       toast.error('Failed to delete product');

@@ -11,6 +11,7 @@ import Header from "@/components/Header";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
+import { useProduct } from "@/contexts/ProductContext";
 import toast from 'react-hot-toast';
 
 export default function ProductsPage() {
@@ -25,10 +26,20 @@ export default function ProductsPage() {
   const { addToCart } = useCart();
   const { isAuthenticated } = useAuth();
   const { toggleFavorite, isFavorite } = useFavorites();
+  const { getUpdatedProduct, refreshAllProducts } = useProduct();
   const router = useRouter();
 
   const handleAddToCart = async (product: Product) => {
     if (!product.inStock) return;
+    
+    // Get fresh product data to check current stock
+    const updatedProduct = await getUpdatedProduct(product.id);
+    if (!updatedProduct?.inStock) {
+      toast.error('Product is currently out of stock');
+      // Refresh products to show updated stock status
+      refreshAllProducts();
+      return;
+    }
     
     // Check if user is authenticated
     if (!isAuthenticated) {
@@ -63,6 +74,8 @@ export default function ProductsPage() {
     
     try {
       await addToCart(product, 1);
+      // Refresh products to show updated stock after adding to cart
+      refreshAllProducts();
     } catch (error) {
       console.error('Error adding to cart:', error);
     }

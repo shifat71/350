@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { Product, CartItem } from '@/types';
 import { useAuth } from './AuthContext';
+import { useProduct } from './ProductContext';
 import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
 
@@ -121,7 +122,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     isLoading: false,
   });
 
-  const { user, token, isAuthenticated } = useAuth();
+  const { token, isAuthenticated } = useAuth();
+  const { refreshAllProducts } = useProduct();
 
   // Define all functions first before useEffect
   const loadCart = async () => {
@@ -318,6 +320,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         // For authenticated users, refresh the cart to get updated data from server
         console.log('🔄 CartContext: Refreshing cart after add');
         await loadCart(); // Direct call to loadCart for immediate update
+        // Refresh product data to show updated stock
+        refreshAllProducts();
         toast.success('Added to cart!');
         console.log('✅ CartContext: Authenticated add successful');
       } catch (error) {
@@ -348,6 +352,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         await api.cart.remove(token, productId);
         // Refresh cart from server to ensure accuracy
         await loadCart();
+        // Refresh product data to show updated stock
+        refreshAllProducts();
         toast.success('Removed from cart');
       } catch (error) {
         console.error('Error removing from cart:', error);
@@ -372,6 +378,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         await api.cart.update(token, productId, quantity);
         // Refresh cart from server to ensure accuracy
         await loadCart();
+        // Refresh product data to show updated stock
+        refreshAllProducts();
       } catch (error) {
         console.error('Error updating cart:', error);
         throw error;
@@ -387,6 +395,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       try {
         await api.cart.clear(token);
         dispatch({ type: 'CLEAR_CART' });
+        // Refresh product data to show updated stock
+        refreshAllProducts();
         toast.success('Cart cleared');
       } catch (error) {
         console.error('Error clearing cart:', error);
