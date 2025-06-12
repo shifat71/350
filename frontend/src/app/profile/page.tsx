@@ -56,8 +56,8 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
-        <div className="text-lg text-gray-900 dark:text-white">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
       </div>
     );
   }
@@ -67,11 +67,11 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+    <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-600">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Profile</h1>
+        <div className="bg-white shadow rounded-lg">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
           </div>
           
           <div className="p-6">
@@ -79,13 +79,13 @@ export default function ProfilePage() {
               <div className="space-y-6">
                 {/* Profile Information */}
                 <div>
-                  <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                  <h2 className="text-lg font-medium text-gray-900 mb-4">
                     Personal Information
                   </h2>
                   
                   <div className="space-y-4">
                     <div>
-                      <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
                         First Name
                       </label>
                       <input
@@ -95,12 +95,12 @@ export default function ProfilePage() {
                         value={formData.firstName}
                         onChange={handleInputChange}
                         disabled={!isEditing}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm disabled:bg-gray-50 dark:disabled:bg-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm disabled:bg-gray-50"
                       />
                     </div>
                     
                     <div>
-                      <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
                         Last Name
                       </label>
                       <input
@@ -110,12 +110,12 @@ export default function ProfilePage() {
                         value={formData.lastName}
                         onChange={handleInputChange}
                         disabled={!isEditing}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm disabled:bg-gray-50 dark:disabled:bg-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm disabled:bg-gray-50"
                       />
                     </div>
                     
                     <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                         Email Address
                       </label>
                       <input
@@ -125,15 +125,15 @@ export default function ProfilePage() {
                         value={formData.email}
                         onChange={handleInputChange}
                         disabled={!isEditing}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm disabled:bg-gray-50 dark:disabled:bg-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm disabled:bg-gray-50"
                       />
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <label className="block text-sm font-medium text-gray-700">
                         Account Type
                       </label>
-                      <p className="mt-1 text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded-md">
+                      <p className="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded-md">
                         {user.userType}
                       </p>
                     </div>
@@ -146,14 +146,14 @@ export default function ProfilePage() {
                         <button
                           type="button"
                           onClick={handleCancel}
-                          className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         >
                           Cancel
                         </button>
                         <button
                           type="button"
                           onClick={handleSave}
-                          className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 dark:bg-indigo-700 hover:bg-indigo-700 dark:hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                          className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         >
                           Save Changes
                         </button>
@@ -162,7 +162,7 @@ export default function ProfilePage() {
                       <button
                         type="button"
                         onClick={() => setIsEditing(true)}
-                        className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 dark:bg-indigo-700 hover:bg-indigo-700 dark:hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                       >
                         Edit Profile
                       </button>
@@ -171,24 +171,24 @@ export default function ProfilePage() {
                 </div>
                 
                 {/* Quick Actions */}
-                <div className="border-t border-gray-200 dark:border-gray-600 pt-6">
-                  <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                <div className="border-t border-gray-200 pt-6">
+                  <h2 className="text-lg font-medium text-gray-900 mb-4">
                     Quick Actions
                   </h2>
                   <div className="space-y-3">
                     <button
                       onClick={() => router.push('/orders')}
-                      className="w-full text-left px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      className="w-full text-left px-4 py-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
                     >
-                      <span className="font-medium text-gray-900 dark:text-white">View Order History</span>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">See all your previous orders</p>
+                      <span className="font-medium">View Order History</span>
+                      <p className="text-sm text-gray-500">See all your previous orders</p>
                     </button>
                     <button
                       onClick={() => router.push('/cart')}
-                      className="w-full text-left px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      className="w-full text-left px-4 py-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
                     >
-                      <span className="font-medium text-gray-900 dark:text-white">View Cart</span>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Check items in your cart</p>
+                      <span className="font-medium">View Cart</span>
+                      <p className="text-sm text-gray-500">Check items in your cart</p>
                     </button>
                   </div>
                 </div>

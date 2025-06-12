@@ -5,19 +5,27 @@ export const api = {
   getProducts: async (params?: {
     category?: string;
     featured?: boolean;
-    limit?: number;
-    page?: number;
+    inStock?: boolean;
+    minPrice?: number;
+    maxPrice?: number;
     sortBy?: string;
     sortOrder?: string;
+    limit?: number;
+    page?: number;
+    search?: string;
   }) => {
     const searchParams = new URLSearchParams();
     
     if (params?.category) searchParams.append('category', params.category);
     if (params?.featured) searchParams.append('featured', 'true');
-    if (params?.limit) searchParams.append('limit', params.limit.toString());
-    if (params?.page) searchParams.append('page', params.page.toString());
+    if (params?.inStock !== undefined) searchParams.append('inStock', params.inStock.toString());
+    if (params?.minPrice !== undefined) searchParams.append('minPrice', params.minPrice.toString());
+    if (params?.maxPrice !== undefined) searchParams.append('maxPrice', params.maxPrice.toString());
     if (params?.sortBy) searchParams.append('sortBy', params.sortBy);
     if (params?.sortOrder) searchParams.append('sortOrder', params.sortOrder);
+    if (params?.limit) searchParams.append('limit', params.limit.toString());
+    if (params?.page) searchParams.append('page', params.page.toString());
+    if (params?.search) searchParams.append('search', params.search);
     
     const url = `${API_BASE_URL}/products?${searchParams}`;
     console.log('Fetching products from:', url);
