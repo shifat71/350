@@ -52,11 +52,31 @@ async def text_search(request: TextSearchRequest):
 @router.post("/image", response_model=SearchResponse)
 async def image_search(request: ImageSearchRequest):
     try:
-        validate_base64_image(request.image_base64)
-        result = await image_agent.search(request.image_base64, request.query, limit=request.limit)
-        return SearchResponse(**result)
+        # Validate base64 image data and get properly formatted data URL
+        try:
+            data_url = validate_base64_image(request.image_base64)
+        except HTTPException as e:
+            logger.error("Invalid image data", error=str(e.detail))
+            raise
+            
+        # Perform image search
+        try:
+            result = await image_agent.search(
+                data_url,
+                request.query
+            )
+            return SearchResponse(**result)
+        except Exception as e:
+            logger.error("Image search failed", error=str(e))
+            raise HTTPException(
+                status_code=500,
+                detail=f"Image search failed: {str(e)}"
+            )
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("Image search failed", error=str(e))
-        raise HTTPException(status_code=500, detail="Image search failed") 
+        logger.error("Unexpected error in image search", error=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail="An unexpected error occurred during image search"
+        ) 

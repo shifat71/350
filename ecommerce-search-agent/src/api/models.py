@@ -29,7 +29,7 @@ class ImageSearchRequest(BaseModel):
     image_base64: str = Field(
         ...,
         min_length=100,  # Minimum length for a valid base64 image
-        description="Base64-encoded image data"
+        description="Base64-encoded image data (with or without data URL prefix)"
     )
     query: Optional[str] = Field(
         default=None,
@@ -46,9 +46,25 @@ class ImageSearchRequest(BaseModel):
 
     @validator('image_base64')
     def validate_base64(cls, v: str) -> str:
-        """Validate base64 image data."""
+        """Validate and normalize base64 image data."""
+        # Remove any whitespace
+        v = v.strip()
+        
+        # Add data URL prefix if missing
         if not v.startswith('data:image/'):
-            v = f"data:image/png;base64,{v}"
+            # Try to detect image type from first few bytes
+            try:
+                import base64
+                decoded = base64.b64decode(v[:100])  # Decode just enough to detect type
+                if decoded.startswith(b'\xff\xd8'):
+                    v = f"data:image/jpeg;base64,{v}"
+                elif decoded.startswith(b'\x89PNG'):
+                    v = f"data:image/png;base64,{v}"
+                else:
+                    v = f"data:image/png;base64,{v}"  # Default to PNG
+            except:
+                v = f"data:image/png;base64,{v}"  # Default to PNG on error
+                
         return v
 
 class Product(BaseModel):
