@@ -1,9 +1,8 @@
 from datetime import datetime
 from typing import List, Optional
-from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, ForeignKey, String, Text, func
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID, ARRAY, FLOAT
+from sqlalchemy import DateTime, ForeignKey, String, Text, func, Integer, Boolean, Float
+from sqlalchemy.dialects.postgresql import JSONB, ARRAY
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -12,79 +11,54 @@ class Base(DeclarativeBase):
 
 
 class Category(Base):
-    """Category model for product categorization."""
+    """Category model for product categorization - matches backend schema."""
     __tablename__ = "categories"
 
-    id: Mapped[UUID] = mapped_column(PGUUID, primary_key=True, default=uuid4)
+    id: Mapped[str] = mapped_column(String, primary_key=True)  # CUID from backend
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text)
-    parent_id: Mapped[Optional[UUID]] = mapped_column(PGUUID, ForeignKey("categories.id"))
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
+    image: Mapped[str] = mapped_column(String, nullable=False)
+    productCount: Mapped[int] = mapped_column("productCount", Integer, default=0)
+    featured: Mapped[bool] = mapped_column(Boolean, default=False)
+    createdAt: Mapped[datetime] = mapped_column(
+        "createdAt", DateTime(timezone=True), server_default=func.now()
     )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    updatedAt: Mapped[datetime] = mapped_column(
+        "updatedAt", DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
     # Relationships
-    parent: Mapped[Optional["Category"]] = relationship(
-        "Category", remote_side=[id], backref="children"
-    )
     products: Mapped[List["Product"]] = relationship("Product", back_populates="category")
 
 
 class Product(Base):
-    """Product model for e-commerce items."""
+    """Product model for e-commerce items - matches backend schema."""
     __tablename__ = "products"
 
-    id: Mapped[UUID] = mapped_column(PGUUID, primary_key=True, default=uuid4)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
+    price: Mapped[float] = mapped_column(Float, nullable=False)
+    originalPrice: Mapped[Optional[float]] = mapped_column("originalPrice", Float)
+    image: Mapped[str] = mapped_column(String, nullable=False)
+    images: Mapped[List[str]] = mapped_column(ARRAY(String), default=[])
+    rating: Mapped[float] = mapped_column(Float, default=0)
+    reviews: Mapped[int] = mapped_column(Integer, default=0)
+    inStock: Mapped[bool] = mapped_column("inStock", Boolean, default=True)
+    stock: Mapped[int] = mapped_column(Integer, default=0)
     description: Mapped[Optional[str]] = mapped_column(Text)
-    price: Mapped[float] = mapped_column(FLOAT, nullable=False)
-    category_id: Mapped[UUID] = mapped_column(PGUUID, ForeignKey("categories.id"))
-    stock_quantity: Mapped[int] = mapped_column(default=0)
-    image_url: Mapped[Optional[str]] = mapped_column(Text)
-    product_metadata: Mapped[Optional[dict]] = mapped_column(JSONB)
-    embedding: Mapped[Optional[List[float]]] = mapped_column(ARRAY(FLOAT), name="vector")
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
+    features: Mapped[List[str]] = mapped_column(ARRAY(String), default=[])
+    specifications: Mapped[Optional[dict]] = mapped_column(JSONB)
+    categoryId: Mapped[str] = mapped_column("categoryId", String, ForeignKey("categories.id"))
+    
+    # Vector embedding for search
+    vector: Mapped[Optional[List[float]]] = mapped_column(ARRAY(Float))
+    
+    createdAt: Mapped[datetime] = mapped_column(
+        "createdAt", DateTime(timezone=True), server_default=func.now()
     )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
-    )
-
-    # Relationships
-    category: Mapped["Category"] = relationship("Category", back_populates="products")
-    features: Mapped[List["ProductFeature"]] = relationship(
-        "ProductFeature", back_populates="product", cascade="all, delete-orphan"
-    )
-
-
-class ProductFeature(Base):
-    """Product feature model for additional product attributes."""
-    __tablename__ = "product_features"
-
-    id: Mapped[UUID] = mapped_column(PGUUID, primary_key=True, default=uuid4)
-    product_id: Mapped[UUID] = mapped_column(PGUUID, ForeignKey("products.id", ondelete="CASCADE"))
-    name: Mapped[str] = mapped_column(String(100), nullable=False)
-    value: Mapped[str] = mapped_column(Text, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
+    updatedAt: Mapped[datetime] = mapped_column(
+        "updatedAt", DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
     # Relationships
-    product: Mapped["Product"] = relationship("Product", back_populates="features")
-
-
-class SearchLog(Base):
-    """Search log model for tracking search queries and performance."""
-    __tablename__ = "search_logs"
-
-    id: Mapped[UUID] = mapped_column(PGUUID, primary_key=True, default=uuid4)
-    query: Mapped[str] = mapped_column(Text, nullable=False)
-    query_type: Mapped[str] = mapped_column(String(20), nullable=False)
-    results_count: Mapped[int] = mapped_column(nullable=False)
-    processing_time_ms: Mapped[int] = mapped_column(nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    ) 
+    category: Mapped["Category"] = relationship("Category", back_populates="products") 

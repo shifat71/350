@@ -21,11 +21,11 @@ class RecommendationConfig(BaseModel):
 
 class ProductRecommendation(BaseModel):
     """Model for a product recommendation."""
-    id: str
+    id: int  # Changed from str to int to match backend
     name: str
     description: str
     price: float
-    image_url: str
+    image: str  # Changed from image_url to image to match backend
     category_name: str
     score: float
 

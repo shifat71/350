@@ -3,7 +3,6 @@ from fastapi import APIRouter, HTTPException, Query, Path
 from src.api.models import RecommendationResponse
 from src.agents.recommendation_agent import RecommendationAgent
 from src.utils.logger import get_logger
-from uuid import UUID
 
 router = APIRouter()
 logger = get_logger(__name__)
@@ -23,7 +22,7 @@ recommendation_agent = RecommendationAgent()
     }
 )
 async def get_recommendations(
-    product_id: UUID = Path(..., description="The ID of the product to get recommendations for"),
+    product_id: int = Path(..., description="The ID of the product to get recommendations for"),
     limit: Optional[int] = Query(
         default=5,
         ge=1,

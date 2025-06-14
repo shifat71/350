@@ -10,9 +10,9 @@ logger = get_logger(__name__)
 async def fetch_all_products():
     async with get_db() as db:
         query = text("""
-            SELECT p.id, p.name, p.description, p.price, p.image_url, c.name as category_name
+            SELECT p.id, p.name, p.description, p.price, p.image, c.name as category_name
             FROM products p
-            JOIN categories c ON p.category_id = c.id
+            JOIN categories c ON p."categoryId" = c.id
         """)
         result = await db.execute(query)
         products = [dict(row._mapping) for row in result.fetchall()]

@@ -38,14 +38,21 @@ class SQLGenerationConfig(BaseModel):
 SQL_GENERATION_PROMPT = """You are an expert SQL query generator for an e-commerce product search system.
 Your task is to generate SQL queries based on structured query understanding results.
 
+Database Schema:
+- Table: products (id: integer, name: text, price: float, "originalPrice": float, image: text, images: text[], rating: float, reviews: integer, "inStock": boolean, stock: integer, description: text, features: text[], specifications: jsonb, "categoryId": text, "createdAt": timestamp, "updatedAt": timestamp, vector: float[])
+- Table: categories (id: text, name: text, description: text, image: text, "productCount": integer, featured: boolean, "createdAt": timestamp, "updatedAt": timestamp)
+
 Rules for SQL generation:
 1. Always use parameterized queries with :param_name syntax
 2. Use ILIKE for case-insensitive text matching
-3. Use proper JOINs between products and categories tables
+3. Use proper JOINs between products and categories tables using p."categoryId" = c.id
 4. Include a score column for ranking results
 5. Handle NULL parameters correctly
 6. Use constraints as optional search terms in the WHERE clause
 7. Cast numeric parameters to the correct type
+8. Use double quotes for PostgreSQL column names with camelCase (e.g., "categoryId", "originalPrice")
+9. NEVER use complex ARRAY operations - use simple ILIKE text matching instead
+10. Search features and descriptions using simple text matching, not array operations
 
 Example input:
 {{
@@ -62,29 +69,36 @@ SELECT
     p.name,
     p.description,
     p.price,
-    p.image_url,
+    p."originalPrice",
+    p.image,
+    p.images,
+    p.rating,
+    p.reviews,
+    p."inStock",
+    p.stock,
+    p.features,
+    p.specifications,
     c.name as category_name,
     CASE 
         WHEN c.name ILIKE :category_name THEN 1.0
-        WHEN p.description ILIKE :feature_0 THEN 0.8
-        WHEN p.name ILIKE :brand_0 THEN 0.6
-        WHEN p.name ILIKE :brand_1 THEN 0.6
-        WHEN p.name ILIKE :brand_2 THEN 0.6
+        WHEN p.name ILIKE :feature_0 OR p.description ILIKE :feature_0 THEN 0.9
+        WHEN p.name ILIKE :feature_1 OR p.description ILIKE :feature_1 THEN 0.9
+        WHEN p.name ILIKE :feature_2 OR p.description ILIKE :feature_2 THEN 0.9
+        WHEN p.name ILIKE :brand_0 THEN 0.8
+        WHEN p.name ILIKE :brand_1 THEN 0.8
+        WHEN p.name ILIKE :brand_2 THEN 0.8
         ELSE 0.5
     END as score
 FROM products p
-JOIN categories c ON p.category_id = c.id
-WHERE (c.name ILIKE :category_name OR :category_name IS NULL)
-AND (
-    p.description ILIKE :feature_0 OR 
-    :feature_0 IS NULL
+JOIN categories c ON p."categoryId" = c.id
+WHERE (
+    c.name ILIKE :category_name OR 
+    p.name ILIKE :feature_0 OR p.description ILIKE :feature_0 OR 
+    p.name ILIKE :feature_1 OR p.description ILIKE :feature_1 OR 
+    p.name ILIKE :feature_2 OR p.description ILIKE :feature_2 OR 
+    p.name ILIKE :brand_0 OR p.name ILIKE :brand_1 OR p.name ILIKE :brand_2
 )
-AND (
-    p.name ILIKE :brand_0 OR 
-    p.name ILIKE :brand_1 OR 
-    p.name ILIKE :brand_2 OR 
-    :brand_0 IS NULL
-)
+AND (CAST(p.price AS numeric) >= CAST(:min_price AS numeric) OR :min_price IS NULL)
 AND (CAST(p.price AS numeric) <= CAST(:max_price AS numeric) OR :max_price IS NULL)
 ORDER BY score DESC, p.price ASC
 LIMIT CAST(:limit AS integer);
@@ -93,11 +107,12 @@ Remember to:
 1. Handle NULL parameters correctly
 2. Include a score column for ranking
 3. Use parameterized queries
-4. Add proper JOINs
+4. Add proper JOINs using p."categoryId" = c.id
 5. Include ORDER BY clause
 6. Add LIMIT clause
 7. Use constraints as optional search terms
-8. Cast numeric parameters to the correct type"""
+8. Cast numeric parameters to the correct type
+9. Use double quotes for camelCase column names"""
 
 class SQLGenerationChain:
     """Chain for generating SQL queries from query understanding results."""

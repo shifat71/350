@@ -11,11 +11,15 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from src.utils.logger import get_logger
+from src.database.models import Base
 
 logger = get_logger(__name__)
 
-# Create async engine
-DATABASE_URL = f"postgresql+asyncpg://{os.environ['POSTGRES_USER']}:{os.environ['POSTGRES_PASSWORD']}@{os.environ['POSTGRES_HOST']}:{os.environ['POSTGRES_PORT']}/{os.environ['POSTGRES_DB']}"
+# Use the same DATABASE_URL as backend - priority order: env var, then constructed URL
+DATABASE_URL = (
+    os.environ.get("DATABASE_URL") or 
+    f"postgresql+asyncpg://{os.environ.get('POSTGRES_USER', 'postgres')}:{os.environ.get('POSTGRES_PASSWORD', 'postgres')}@{os.environ.get('POSTGRES_HOST', 'localhost')}:{os.environ.get('POSTGRES_PORT', '5432')}/{os.environ.get('POSTGRES_DB', 'postgres')}"
+)
 
 engine = create_async_engine(
     DATABASE_URL,

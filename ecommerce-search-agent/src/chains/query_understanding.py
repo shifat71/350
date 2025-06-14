@@ -25,10 +25,34 @@ class PriceRange(BaseModel):
 class QueryUnderstandingResult(BaseModel):
     """Structured result of query understanding."""
     category: Optional[str] = Field(None, max_length=100)
-    features: List[str] = Field(default_factory=list, max_items=10)
+    features: List[str] = Field(default_factory=list)
     price_range: Optional[PriceRange] = None
     brands: List[str] = Field(default_factory=list, max_items=5)
     constraints: List[str] = Field(default_factory=list, max_items=5)
+
+    @validator('features')
+    def validate_features(cls, v: List[str]) -> List[str]:
+        """Validate and limit features to top 10 items."""
+        if len(v) > 10:
+            logger.warning(f"Features list too long ({len(v)} items), truncating to 10 most important")
+            return v[:10]  # Take first 10 features
+        return v
+
+    @validator('brands')
+    def validate_brands(cls, v: List[str]) -> List[str]:
+        """Validate and limit brands to 5 items."""
+        if len(v) > 5:
+            logger.warning(f"Brands list too long ({len(v)} items), truncating to 5")
+            return v[:5]
+        return v
+
+    @validator('constraints')
+    def validate_constraints(cls, v: List[str]) -> List[str]:
+        """Validate and limit constraints to 5 items."""
+        if len(v) > 5:
+            logger.warning(f"Constraints list too long ({len(v)} items), truncating to 5")
+            return v[:5]
+        return v
 
 # System prompt for query understanding
 QUERY_UNDERSTANDING_PROMPT = """You are an expert e-commerce search query understanding system.
@@ -36,10 +60,10 @@ Your task is to analyze the user's query and extract key information that will h
 
 For each query, you should identify:
 1. Main product category or type
-2. Key features or attributes
+2. Key features or attributes (MAXIMUM 10 most important ones)
 3. Price range (if mentioned)
-4. Brand preferences (if any)
-5. Any specific requirements or constraints
+4. Brand preferences (if any, MAXIMUM 5)
+5. Any specific requirements or constraints (MAXIMUM 5)
 
 Format your response as a JSON object with the following structure:
 {{
@@ -52,10 +76,11 @@ Format your response as a JSON object with the following structure:
 
 Rules:
 - Keep category names concise and specific
-- Extract only relevant features that would help in product search
+- Extract only the TOP 10 most relevant features that would help in product search
 - Price ranges should be in the same currency (default: USD)
-- Only include brands if explicitly mentioned
-- Constraints should be specific requirements that limit the search
+- Only include brands if explicitly mentioned (max 5)
+- Constraints should be specific requirements that limit the search (max 5)
+- Focus on the most important and distinctive features
 
 Example:
 Input: "I'm looking for a wireless gaming mouse under $50 with RGB lighting"

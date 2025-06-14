@@ -1,6 +1,5 @@
 from typing import List, Optional, Any
-from uuid import UUID
-from pydantic import BaseModel, Field, validator, HttpUrl
+from pydantic import BaseModel, Field, validator
 from decimal import Decimal
 from datetime import datetime
 
@@ -69,18 +68,25 @@ class ImageSearchRequest(BaseModel):
 
 class Product(BaseModel):
     """Product model for API responses."""
-    id: UUID
+    id: int  # Changed from UUID to int to match backend
     name: str = Field(..., min_length=1, max_length=200)
     description: Optional[str] = Field(None, max_length=1000)
     price: Decimal = Field(..., ge=0)
-    image_url: Optional[HttpUrl] = None
+    originalPrice: Optional[Decimal] = Field(None, ge=0)
+    image: Optional[str] = None  # Changed from image_url to image to match backend
+    images: Optional[List[str]] = Field(default=[])
+    rating: Optional[float] = Field(None, ge=0, le=5)
+    reviews: Optional[int] = Field(None, ge=0)
+    inStock: Optional[bool] = Field(None)
+    stock: Optional[int] = Field(None, ge=0)
+    features: Optional[List[str]] = Field(default=[])
+    specifications: Optional[dict] = None
     category_name: Optional[str] = Field(None, max_length=100)
-    score: Optional[float] = Field(None, ge=0, le=1)
+    score: Optional[float] = Field(None, ge=0, le=2)  # Increased max to 2 for combined scores
 
     class Config:
         json_encoders = {
             Decimal: str,
-            UUID: str
         }
 
 class SearchResponse(BaseModel):

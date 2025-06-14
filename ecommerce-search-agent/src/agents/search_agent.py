@@ -130,21 +130,23 @@ class SearchAgent(BaseAgent):
                     "max_price": query_understanding.price_range.max if query_understanding.price_range else None,
                     "limit": limit
                 }
-                # Add feature parameters (ensure at least one is present if referenced)
-                max_features = max(1, len(query_understanding.features))
+                # Add feature parameters (ensure slots for all features used in the SQL)
+                max_features = max(7, len(query_understanding.features))  # Support up to 7 features
                 for i in range(max_features):
                     if i < len(query_understanding.features):
                         params[f"feature_{i}"] = f"%{query_understanding.features[i]}%"
                     else:
                         params[f"feature_{i}"] = None
-                # Add brand parameters (ensure at least one is present if referenced)
-                max_brands = max(1, len(query_understanding.brands))
+                        
+                # Add brand parameters (ensure slots for all brands used in the SQL)
+                max_brands = max(3, len(query_understanding.brands))  # Support up to 3 brands
                 for i in range(max_brands):
                     if i < len(query_understanding.brands):
                         params[f"brand_{i}"] = f"%{query_understanding.brands[i]}%"
                     else:
                         params[f"brand_{i}"] = None
-                # Add constraint parameters (ensure at least one is present if referenced)
+                        
+                # Add constraint parameters
                 max_constraints = max(1, len(query_understanding.constraints))
                 for i in range(max_constraints):
                     if i < len(query_understanding.constraints):
@@ -204,34 +206,92 @@ class SearchAgent(BaseAgent):
             Dict containing combined and ranked results
         """
         # Create a dictionary of products by ID
-        products_by_id = {
-            str(product["id"]): {
-                "id": product["id"],
+        products_by_id = {}
+        for product in sql_results:
+            # Convert features and specifications properly for SQL results
+            features = product.get("features", [])
+            if isinstance(features, str):
+                try:
+                    import json
+                    features = json.loads(features) if features else []
+                except:
+                    features = []
+            
+            specifications = product.get("specifications")
+            if isinstance(specifications, str):
+                try:
+                    import json
+                    specifications = json.loads(specifications) if specifications else {}
+                except:
+                    specifications = {}
+            
+            products_by_id[str(product["id"])] = {
+                "id": int(product["id"]),  # Ensure ID is integer
                 "name": product["name"],
-                "description": product["description"],
-                "price": product["price"],
-                "image_url": product["image_url"],
+                "description": product.get("description"),
+                "price": float(product["price"]),
+                "originalPrice": product.get("originalPrice"),
+                "image": product["image"],
+                "images": product.get("images", []),
+                "rating": float(product.get("rating", 0)),
+                "reviews": int(product.get("reviews", 0)),
+                "inStock": product.get("inStock", True),
+                "stock": int(product.get("stock", 0)),
+                "features": features,
+                "specifications": specifications,
                 "category_name": product["category_name"],
-                "score": 1.0,  # Base score for SQL results
+                "score": float(product.get("score", 1.0)),  # Use SQL score if available
             }
-            for product in sql_results
-        }
 
         # Add vector search results
         for result in vector_results:
-            product_id = result["id"]
+            product_id = str(result["id"])  # ChromaDB stores as string
             if product_id in products_by_id:
                 # Increase score for products found in both searches
                 products_by_id[product_id]["score"] += 1.0 - result["distance"]
             else:
-                # Add new products from vector search
+                # Add new products from vector search with metadata
+                metadata = result.get("metadata", {})
+                # Try to get the backend ID from metadata, otherwise use the ChromaDB ID
+                backend_id = metadata.get("backend_id", result["id"])
+                try:
+                    backend_id = int(backend_id)
+                except (ValueError, TypeError):
+                    logger.warning(f"Could not convert backend_id to integer: {backend_id}")
+                    continue  # Skip this result if we can't get a valid backend ID
+                    
+                # Convert features and specifications from string metadata
+                features = metadata.get("features", "[]")
+                if isinstance(features, str):
+                    try:
+                        import json
+                        features = json.loads(features) if features else []
+                    except:
+                        features = []
+                
+                specifications = metadata.get("specifications", "{}")
+                if isinstance(specifications, str):
+                    try:
+                        import json
+                        specifications = json.loads(specifications) if specifications else {}
+                    except:
+                        specifications = {}
+                
                 products_by_id[product_id] = {
-                    "id": product_id,
-                    "name": result["metadata"].get("name", ""),
-                    "description": result["metadata"].get("description", ""),
-                    "price": result["metadata"].get("price", 0.0),
-                    "image_url": result["metadata"].get("image_url", ""),
-                    "category_name": result["metadata"].get("category_name", ""),
+                    "id": backend_id,
+                    "name": metadata.get("name", ""),
+                    "description": metadata.get("description", ""),
+                    "price": float(metadata.get("price", 0.0)),
+                    "originalPrice": None,
+                    "image": metadata.get("image", ""),
+                    "images": [],
+                    "rating": float(metadata.get("rating", 0)),
+                    "reviews": int(metadata.get("reviews", 0)),
+                    "inStock": metadata.get("in_stock", True),
+                    "stock": int(metadata.get("stock", 0)),
+                    "features": features,
+                    "specifications": specifications,
+                    "category_name": metadata.get("category", ""),
                     "score": 1.0 - result["distance"],
                 }
 
@@ -242,15 +302,16 @@ class SearchAgent(BaseAgent):
             reverse=True,
         )[:limit]  # Take only the top n results
 
-        # Convert UUIDs to strings for JSON serialization
+        # Ensure IDs are integers and scores are clamped
         for product in sorted_products:
-            if isinstance(product["id"], (bytes, bytearray)):
-                product["id"] = product["id"].decode()
-            elif not isinstance(product["id"], str):
-                product["id"] = str(product["id"])
-            # Clamp score to a maximum of 1.0
+            if not isinstance(product["id"], int):
+                try:
+                    product["id"] = int(product["id"])
+                except (ValueError, TypeError):
+                    logger.warning(f"Could not convert product ID to integer: {product['id']}")
+            # Clamp score to a maximum of 2.0 (1.0 from SQL + 1.0 from vector)
             if "score" in product:
-                product["score"] = min(product["score"], 1.0)
+                product["score"] = min(product["score"], 2.0)
 
         return {
             "products": sorted_products,

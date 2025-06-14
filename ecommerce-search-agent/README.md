@@ -2,9 +2,41 @@
 
 A modern, AI-powered search and recommendation backend for e-commerce platforms. Supports natural language, image+text, and vector-based product search, with fast caching and scalable architecture.
 
+**🔄 UPDATED: Now integrated with backend database!**
+
+This search agent now uses the same PostgreSQL database as the backend, ensuring consistent product data between search results and product pages.
+
 ## Requirements
 - Python 3.11 (strict requirement)
 - uv
+- Backend database running and seeded
+- ChromaDB and Redis services
+
+## Quick Setup (Backend Integration)
+
+1. **Ensure backend is running**:
+   ```bash
+   cd ../backend
+   npm run dev
+   ```
+
+2. **Run the integration setup**:
+   ```bash
+   cd ecommerce-search-agent
+   ./scripts/setup_backend_integration.sh
+   ```
+
+3. **Verify the integration**:
+   ```bash
+   python scripts/verify_integration.py
+   ```
+
+4. **Start the search agent**:
+   ```bash
+   python -m src.main
+   ```
+
+## Manual Setup
 
 ## Setting Up Python 3.11
 
