@@ -1,7 +1,8 @@
 import os
 from dotenv import load_dotenv
 load_dotenv()
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
+from chromadb.api.models.Collection import Collection
 
 import chromadb
 from chromadb.config import Settings as ChromaSettings
@@ -11,36 +12,61 @@ from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+def get_required_env_var(name: str) -> str:
+    """Get a required environment variable or raise an error."""
+    value = os.environ.get(name)
+    if not value:
+        raise ValueError(f"Required environment variable {name} is not set")
+    return value
+
 # Initialize ChromaDB client
-chroma_client = chromadb.HttpClient(
-    host=os.environ.get("CHROMA_HOST", "localhost"),
-    port=os.environ.get("CHROMA_PORT"),
-    settings=ChromaSettings(
-        anonymized_telemetry=False,
-        allow_reset=True,
-    ),
-)
+try:
+    chroma_client = chromadb.HttpClient(
+        host=get_required_env_var("CHROMA_HOST"),
+        port=int(get_required_env_var("CHROMA_PORT")),
+        settings=ChromaSettings(
+            anonymized_telemetry=False,
+            allow_reset=True,
+        ),
+    )
+except ValueError as e:
+    logger.error("Failed to initialize ChromaDB client", error=str(e))
+    raise
 
 # Initialize OpenAI embedding function
-openai_ef = embedding_functions.OpenAIEmbeddingFunction(
-    api_key=os.environ.get("OPENAI_API_KEY"),
-    model_name="text-embedding-ada-002",
-)
+try:
+    openai_ef = embedding_functions.OpenAIEmbeddingFunction(
+        api_key=get_required_env_var("OPENAI_API_KEY"),
+        model_name="text-embedding-ada-002",
+    )
+except ValueError as e:
+    logger.error("Failed to initialize OpenAI embedding function", error=str(e))
+    raise
 
 # Create or get collection
-collection = chroma_client.get_or_create_collection(
-    name="products",
-    embedding_function=openai_ef,
-    metadata={"hnsw:space": "cosine"},
-)
-
+try:
+    collection: Collection = chroma_client.get_or_create_collection(
+        name="products",
+        embedding_function=openai_ef,
+        metadata={"hnsw:space": "cosine"},
+    )
+except Exception as e:
+    logger.error("Failed to create/get ChromaDB collection", error=str(e))
+    raise
 
 async def add_product_embedding(
     product_id: str,
     text: str,
-    metadata: Optional[dict] = None,
+    metadata: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Add a product embedding to ChromaDB."""
+    if not product_id or not isinstance(product_id, str):
+        raise ValueError("product_id must be a non-empty string")
+    if not text or not isinstance(text, str):
+        raise ValueError("text must be a non-empty string")
+    if metadata is not None and not isinstance(metadata, dict):
+        raise ValueError("metadata must be a dictionary or None")
+
     try:
         collection.add(
             ids=[product_id],
@@ -52,13 +78,19 @@ async def add_product_embedding(
         logger.error("Error adding product embedding", error=str(e), product_id=product_id)
         raise
 
-
 async def search_similar_products(
     query: str,
     n_results: int = 1,
-    where: Optional[dict] = None,
-) -> List[dict]:
+    where: Optional[Dict[str, Any]] = None,
+) -> List[Dict[str, Any]]:
     """Search for similar products using vector similarity."""
+    if not query or not isinstance(query, str):
+        raise ValueError("query must be a non-empty string")
+    if not isinstance(n_results, int) or n_results < 1:
+        raise ValueError("n_results must be a positive integer")
+    if where is not None and not isinstance(where, dict):
+        raise ValueError("where must be a dictionary or None")
+
     try:
         results = collection.query(
             query_texts=[query],
@@ -84,9 +116,11 @@ async def search_similar_products(
         logger.error("Error searching similar products", error=str(e))
         raise
 
-
 async def delete_product_embedding(product_id: str) -> None:
     """Delete a product embedding from ChromaDB."""
+    if not product_id or not isinstance(product_id, str):
+        raise ValueError("product_id must be a non-empty string")
+
     try:
         collection.delete(ids=[product_id])
         logger.info("Product embedding deleted successfully", product_id=product_id)

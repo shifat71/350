@@ -40,7 +40,7 @@ class Product(Base):
     id: Mapped[UUID] = mapped_column(PGUUID, primary_key=True, default=uuid4)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text)
-    price: Mapped[float] = mapped_column(String, nullable=False)
+    price: Mapped[float] = mapped_column(FLOAT, nullable=False)
     category_id: Mapped[UUID] = mapped_column(PGUUID, ForeignKey("categories.id"))
     stock_quantity: Mapped[int] = mapped_column(default=0)
     image_url: Mapped[Optional[str]] = mapped_column(Text)

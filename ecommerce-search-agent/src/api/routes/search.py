@@ -7,9 +7,20 @@ from src.utils.validators import validate_base64_image
 from langchain.tools import Tool
 from src.database.chromadb_client import search_similar_products
 from src.database.postgres import get_db
+from sqlalchemy import select
+from src.database.models import Product
 
 router = APIRouter()
 logger = get_logger(__name__)
+
+def safe_database_search(query: str):
+    """Safely search products in the database using SQLAlchemy."""
+    db = get_db()
+    search_query = select(Product).where(
+        Product.name.ilike(f"%{query}%") | 
+        Product.description.ilike(f"%{query}%")
+    )
+    return db.execute(search_query).scalars().all()
 
 # Create tools for the search agent
 search_tools = [
@@ -20,8 +31,8 @@ search_tools = [
     ),
     Tool(
         name="database_search",
-        description="Search for products in the database using SQL",
-        func=lambda query: get_db().execute(query),
+        description="Search for products in the database using safe SQLAlchemy queries",
+        func=safe_database_search,
     ),
 ]
 

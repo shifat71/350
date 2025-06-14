@@ -1,17 +1,19 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
+from sqlalchemy import select, and_, or_, func
 
 from langchain.tools import BaseTool, Tool
 from langchain_core.messages import BaseMessage
 
 from src.agents.base_agent import BaseAgent
-from src.chains.query_understanding import QueryUnderstandingChain
-from src.chains.sql_generation import SQLGenerationChain
+from src.chains.query_understanding import QueryUnderstandingChain, QueryUnderstandingResult
+from src.chains.sql_generation import SQLGenerationChain, SQLGenerationConfig
 from src.database.chromadb_client import search_similar_products
 from src.database.postgres import get_db
 from src.database.redis_client import get_cache, set_cache
 from src.utils.logger import get_logger
 from sqlalchemy import text
 from src.utils.duckduckgo_search import duckduckgo_web_search
+from src.database.models import Product, Category
 
 logger = get_logger(__name__)
 
@@ -72,7 +74,24 @@ class SearchAgent(BaseAgent):
         chat_history: Optional[List[BaseMessage]] = None,
         limit: int = 5,
     ) -> Dict:
-        """Search for products based on the query."""
+        """
+        Search for products based on the query.
+        
+        Args:
+            query: The user's search query
+            chat_history: Optional list of previous messages for context
+            limit: Maximum number of results to return
+            
+        Returns:
+            Dict containing search results and metadata
+            
+        Raises:
+            ValueError: If the query is invalid
+            Exception: For other errors during processing
+        """
+        if not query or not isinstance(query, str):
+            raise ValueError("query must be a non-empty string")
+        
         try:
             logger.info(f"Starting search for query: {query}")
             # Check cache first
@@ -97,50 +116,54 @@ class SearchAgent(BaseAgent):
             logger.info(f"Query understanding result: {query_understanding}")
 
             # Generate SQL query
-            logger.info(f"Generating SQL for: {query_understanding}")
-            sql_query = await self.sql_generation.run(
-                query_understanding,
-                limit,
-            )
-            logger.info(f"Generated SQL: {sql_query}")
-
-            # Extract parameters from query_understanding
-            parameters = {
-                "category_name": query_understanding.get("category", ""),
-                "limit": limit
-            }
-            # Add features as parameters (feature1, feature2, ...)
-            features = query_understanding.get("features", [])
-            # The SQL may expect up to N features; let's support up to 8 for now
-            for i in range(8):
-                key = f"feature{i+1}"
-                if i < len(features):
-                    parameters[key] = f"%{features[i]}%"
-                else:
-                    parameters[key] = "%%"  # wildcard if not enough features
-            # Always include min_price and max_price if price_range is present
-            price_range = query_understanding.get("price_range", {})
-            min_price = price_range.get("min") if price_range else None
-            max_price = price_range.get("max") if price_range else None
-            parameters["min_price"] = min_price
-            parameters["max_price"] = max_price
-
-            # Add constraints as parameters (constraint1, constraint2, ...)
-            constraints = query_understanding.get("constraints", [])
-            # The SQL may expect up to 3 constraints; support up to 3
-            for i in range(3):
-                key = f"constraint{i+1}" if len(constraints) > 1 else "constraint"
-                if i < len(constraints):
-                    parameters[key] = f"%{constraints[i]}%"
-                else:
-                    parameters[key] = "%%"  # wildcard if not enough constraints
-            logger.info(f"SQL parameters: {parameters}")
+            sql_config = SQLGenerationConfig(limit=limit)
+            sql_query = await self.sql_generation.run(query_understanding, sql_config)
+            logger.info(f"Generated SQL query: {sql_query}")
 
             # Execute SQL query
-            logger.info(f"Executing SQL query: {sql_query} with parameters: {parameters}")
+            logger.info("Executing SQL query")
             async with get_db() as db:
-                result = await db.execute(text(sql_query), parameters)
-                products = result.fetchall()
+                # Extract parameters from query understanding
+                params = {
+                    "category_name": f"%{query_understanding.category}%" if query_understanding.category else None,
+                    "min_price": query_understanding.price_range.min if query_understanding.price_range else None,
+                    "max_price": query_understanding.price_range.max if query_understanding.price_range else None,
+                    "limit": limit
+                }
+                # Add feature parameters (ensure at least one is present if referenced)
+                max_features = max(1, len(query_understanding.features))
+                for i in range(max_features):
+                    if i < len(query_understanding.features):
+                        params[f"feature_{i}"] = f"%{query_understanding.features[i]}%"
+                    else:
+                        params[f"feature_{i}"] = None
+                # Add brand parameters (ensure at least one is present if referenced)
+                max_brands = max(1, len(query_understanding.brands))
+                for i in range(max_brands):
+                    if i < len(query_understanding.brands):
+                        params[f"brand_{i}"] = f"%{query_understanding.brands[i]}%"
+                    else:
+                        params[f"brand_{i}"] = None
+                # Add constraint parameters (ensure at least one is present if referenced)
+                max_constraints = max(1, len(query_understanding.constraints))
+                for i in range(max_constraints):
+                    if i < len(query_understanding.constraints):
+                        params[f"constraint_{i}"] = f"%{query_understanding.constraints[i]}%"
+                    else:
+                        params[f"constraint_{i}"] = None
+                # Prepare parameters for SQL execution
+                string_keys = set()
+                # Identify string/text parameters
+                for k in params:
+                    if k.startswith("feature_") or k.startswith("brand_") or k.startswith("constraint_") or k == "category_name":
+                        string_keys.add(k)
+                # Cast only string/text parameters to strings
+                for k in string_keys:
+                    if params[k] is not None:
+                        params[k] = str(params[k])
+                # min_price, max_price, and limit remain as numbers or None
+                result = await db.execute(text(sql_query), params)
+                products = result.mappings().all()
             logger.info(f"SQL query returned {len(products)} products")
 
             # Perform vector search with limit
@@ -169,7 +192,17 @@ class SearchAgent(BaseAgent):
         vector_results: List[Dict],
         limit: int,
     ) -> Dict:
-        """Combine and rank results from SQL and vector search."""
+        """
+        Combine and rank results from SQL and vector search.
+        
+        Args:
+            sql_results: List of products from SQL search
+            vector_results: List of products from vector search
+            limit: Maximum number of results to return
+            
+        Returns:
+            Dict containing combined and ranked results
+        """
         # Create a dictionary of products by ID
         products_by_id = {
             str(product["id"]): {
@@ -208,6 +241,16 @@ class SearchAgent(BaseAgent):
             key=lambda x: x["score"],
             reverse=True,
         )[:limit]  # Take only the top n results
+
+        # Convert UUIDs to strings for JSON serialization
+        for product in sorted_products:
+            if isinstance(product["id"], (bytes, bytearray)):
+                product["id"] = product["id"].decode()
+            elif not isinstance(product["id"], str):
+                product["id"] = str(product["id"])
+            # Clamp score to a maximum of 1.0
+            if "score" in product:
+                product["score"] = min(product["score"], 1.0)
 
         return {
             "products": sorted_products,
