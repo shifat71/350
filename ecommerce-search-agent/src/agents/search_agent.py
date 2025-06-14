@@ -57,7 +57,7 @@ class SearchAgent(BaseAgent):
         self,
         query: str,
         chat_history: Optional[List[BaseMessage]] = None,
-        limit: int = 1,
+        limit: int = 5,
     ) -> Dict:
         """Search for products based on the query."""
         try:
@@ -100,14 +100,14 @@ class SearchAgent(BaseAgent):
                 result = await db.execute(text(sql_query), parameters)
                 products = result.fetchall()
 
-            # Perform vector search with limit 1
+            # Perform vector search with limit
             vector_results = await search_similar_products(
                 query,
-                n_results=1,
+                n_results=limit,
             )
 
             # Combine and rank results
-            combined_results = self._combine_results(products, vector_results)
+            combined_results = self._combine_results(products, vector_results, limit)
 
             # Cache the results
             await set_cache(cache_key, combined_results)
@@ -121,6 +121,7 @@ class SearchAgent(BaseAgent):
         self,
         sql_results: List[Dict],
         vector_results: List[Dict],
+        limit: int,
     ) -> Dict:
         """Combine and rank results from SQL and vector search."""
         # Create a dictionary of products by ID
@@ -155,12 +156,12 @@ class SearchAgent(BaseAgent):
                     "score": 1.0 - result["distance"],
                 }
 
-        # Sort products by score and take only the top 1
+        # Sort products by score and take only the top n (limit)
         sorted_products = sorted(
             products_by_id.values(),
             key=lambda x: x["score"],
             reverse=True,
-        )[:1]  # Take only the top 1 result
+        )[:limit]  # Take only the top n results
 
         return {
             "products": sorted_products,

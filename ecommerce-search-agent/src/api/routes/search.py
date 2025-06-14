@@ -32,7 +32,7 @@ image_agent = ImageAgent()
 @router.post("/text", response_model=SearchResponse)
 async def text_search(request: TextSearchRequest):
     try:
-        result = await search_agent.search(request.query)
+        result = await search_agent.search(request.query, limit=request.limit)
         return SearchResponse(**result)
     except Exception as e:
         logger.error("Text search failed", error=str(e))
@@ -42,7 +42,7 @@ async def text_search(request: TextSearchRequest):
 async def image_search(request: ImageSearchRequest):
     try:
         validate_base64_image(request.image_base64)
-        result = await image_agent.search(request.image_base64, request.query)
+        result = await image_agent.search(request.image_base64, request.query, limit=request.limit)
         return SearchResponse(**result)
     except HTTPException:
         raise

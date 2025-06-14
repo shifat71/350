@@ -55,11 +55,16 @@ class ImageAgent:
             logger.error("Error extracting image features", error=str(e))
             raise
 
-    async def search(self, image_base64: str, query: Optional[str] = None) -> Dict:
+    async def search(
+        self,
+        image_base64: str,
+        query: Optional[str] = None,
+        limit: int = 5,
+    ) -> Dict:
         """Perform image+text search."""
         # Step 1: Extract features from image
         image_features = await self.extract_image_features(image_base64, prompt=query)
         # Step 2: Combine with text (if any)
         combined_query = f"{query or ''} {image_features}".strip()
         # Step 3: Use the search agent
-        return await self.search_agent.search(combined_query) 
+        return await self.search_agent.search(combined_query, limit=limit) 

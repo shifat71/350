@@ -147,6 +147,192 @@ async def seed():
                         'Weight': '45g'
                     }
                 }
+            ),
+            Product(
+                name='Ergonomic Office Chair',
+                price='149.99',
+                description='Stay comfortable during long work hours with this ergonomic office chair featuring lumbar support and adjustable height.',
+                category_id=furniture.id,
+                stock_quantity=20,
+                image_url='https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=500&h=500&fit=crop&crop=center',
+                product_metadata={
+                    'rating': 4.6,
+                    'reviews': 98,
+                    'features': [
+                        'Lumbar support',
+                        'Adjustable height',
+                        'Breathable mesh back',
+                        '360-degree swivel',
+                        'Padded armrests'
+                    ],
+                    'specifications': {
+                        'Material': 'Mesh/Fabric',
+                        'Weight Capacity': '120kg',
+                        'Color': 'Black',
+                        'Warranty': '2 years'
+                    }
+                }
+            ),
+            Product(
+                name='Modern Sofa',
+                price='499.99',
+                description='A stylish and comfortable modern sofa perfect for any living room.',
+                category_id=furniture.id,
+                stock_quantity=10,
+                image_url='https://images.unsplash.com/photo-1519710164239-da123dc03ef4?w=500&h=500&fit=crop&crop=center',
+                product_metadata={
+                    'rating': 4.7,
+                    'reviews': 76,
+                    'features': [
+                        'High-density foam',
+                        'Removable covers',
+                        'Solid wood frame',
+                        'Easy assembly'
+                    ],
+                    'specifications': {
+                        'Seating Capacity': '3',
+                        'Material': 'Fabric/Wood',
+                        'Color': 'Gray',
+                        'Dimensions': '200x90x85cm'
+                    }
+                }
+            ),
+            Product(
+                name='Stainless Steel Cookware Set',
+                price='89.99',
+                description='10-piece stainless steel cookware set for all your kitchen needs.',
+                category_id=home.id,
+                stock_quantity=40,
+                image_url='https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=500&h=500&fit=crop&crop=center',
+                product_metadata={
+                    'rating': 4.4,
+                    'reviews': 120,
+                    'features': [
+                        'Induction compatible',
+                        'Dishwasher safe',
+                        'Tempered glass lids',
+                        'Oven safe up to 400F'
+                    ],
+                    'specifications': {
+                        'Pieces': '10',
+                        'Material': 'Stainless Steel',
+                        'Warranty': '5 years'
+                    }
+                }
+            ),
+            Product(
+                name='Cordless Vacuum Cleaner',
+                price='159.99',
+                description='Lightweight cordless vacuum cleaner with powerful suction and long battery life.',
+                category_id=home.id,
+                stock_quantity=25,
+                image_url='https://images.unsplash.com/photo-1464983953574-0892a716854b?w=500&h=500&fit=crop&crop=center',
+                product_metadata={
+                    'rating': 4.3,
+                    'reviews': 87,
+                    'features': [
+                        'Powerful suction',
+                        'Long battery life',
+                        'HEPA filter',
+                        'Easy to empty dustbin'
+                    ],
+                    'specifications': {
+                        'Battery Life': '40 minutes',
+                        'Weight': '2.5kg',
+                        'Warranty': '1 year'
+                    }
+                }
+            ),
+            Product(
+                name="Men's Running Shoes",
+                price='79.99',
+                description='Lightweight and comfortable running shoes for men, designed for performance.',
+                category_id=fashion.id,
+                stock_quantity=60,
+                image_url='https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500&h=500&fit=crop&crop=center',
+                product_metadata={
+                    'rating': 4.2,
+                    'reviews': 150,
+                    'features': [
+                        'Breathable mesh',
+                        'Cushioned sole',
+                        'Non-slip grip',
+                        'Lightweight design'
+                    ],
+                    'specifications': {
+                        'Material': 'Mesh/Rubber',
+                        'Sizes': '7-12',
+                        'Color': 'Blue/Black'
+                    }
+                }
+            ),
+            Product(
+                name="Women's Handbag",
+                price='59.99',
+                description='Elegant and spacious handbag for women, perfect for daily use.',
+                category_id=fashion.id,
+                stock_quantity=35,
+                image_url='https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&h=500&fit=crop&crop=center',
+                product_metadata={
+                    'rating': 4.5,
+                    'reviews': 110,
+                    'features': [
+                        'Multiple compartments',
+                        'Adjustable strap',
+                        'Water-resistant material'
+                    ],
+                    'specifications': {
+                        'Material': 'PU Leather',
+                        'Color': 'Red',
+                        'Dimensions': '30x12x25cm'
+                    }
+                }
+            ),
+            Product(
+                name='Bluetooth Speaker',
+                price='39.99',
+                description='Portable Bluetooth speaker with deep bass and 12-hour playtime.',
+                category_id=electronics.id,
+                stock_quantity=80,
+                image_url='https://images.unsplash.com/photo-1465101046530-73398c7f28ca?w=500&h=500&fit=crop&crop=center',
+                product_metadata={
+                    'rating': 4.1,
+                    'reviews': 210,
+                    'features': [
+                        'Deep bass',
+                        '12-hour playtime',
+                        'Water-resistant',
+                        'Built-in microphone'
+                    ],
+                    'specifications': {
+                        'Battery Life': '12 hours',
+                        'Weight': '500g',
+                        'Color': 'Black'
+                    }
+                }
+            ),
+            Product(
+                name='LED Desk Lamp',
+                price='24.99',
+                description='Adjustable LED desk lamp with touch controls and USB charging port.',
+                category_id=home.id,
+                stock_quantity=70,
+                image_url='https://images.unsplash.com/photo-1509228468518-180dd4864904?w=500&h=500&fit=crop&crop=center',
+                product_metadata={
+                    'rating': 4.6,
+                    'reviews': 95,
+                    'features': [
+                        'Touch controls',
+                        'USB charging port',
+                        'Adjustable brightness',
+                        'Energy efficient'
+                    ],
+                    'specifications': {
+                        'Power': '8W',
+                        'Color': 'White',
+                        'Warranty': '18 months'
+                    }
+                }
             )
         ]
         session.add_all(products)

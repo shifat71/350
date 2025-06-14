@@ -3,10 +3,12 @@ from pydantic import BaseModel, Field
 
 class TextSearchRequest(BaseModel):
     query: str = Field(..., description="User's search query")
+    limit: int = Field(5, description="Number of top products to return")
 
 class ImageSearchRequest(BaseModel):
     image_base64: str = Field(..., description="Base64-encoded image data")
     query: Optional[str] = Field(None, description="Optional text to accompany the image")
+    limit: int = Field(5, description="Number of top products to return")
 
 class Product(BaseModel):
     id: str

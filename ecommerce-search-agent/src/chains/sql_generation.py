@@ -1,5 +1,6 @@
 from typing import Dict, List, Optional
 import json
+import re
 
 from langchain.chains import LLMChain
 from langchain.prompts import ChatPromptTemplate
@@ -27,10 +28,10 @@ Rules:
    - p.category_id (not p.categoryId or p."categoryId")
    - p.image_url (not p.image)
    - All other column names are lowercase
-7. ALWAYS use LIMIT 1 to return only one result
+7. Use LIMIT {limit} to return the top N results, where N is provided as a parameter.
 
 Example:
-Input: {{"category": "electronics", "features": ["wireless"], "price_range": {{"min": 100, "max": 500}}}}
+Input: {{"category": "electronics", "features": ["wireless"], "price_range": {{"min": 100, "max": 500}}}}, Limit: 5
 Output: SELECT p.id, p.name, p.description, p.price, p.image_url, c.name as category_name
 FROM products p
 JOIN categories c ON p.category_id = c.id
@@ -38,17 +39,18 @@ WHERE c.name ILIKE :category_name
 AND p.description ILIKE :feature
 AND p.price BETWEEN :min_price AND :max_price
 ORDER BY p.price ASC
-LIMIT 1;
+LIMIT 5;
 
 Now generate a SQL query for:
 {query_understanding}
+Limit: {limit}
 
 Remember to:
 1. Use parameterized queries
 2. Include proper JOINs
 3. Add ORDER BY clause
 4. Use proper column names with case sensitivity
-5. ALWAYS use LIMIT 1
+5. Use LIMIT {limit} to return the top N results
 6. Keep the query simple and efficient"""
 
 
@@ -103,8 +105,11 @@ class SQLGenerationChain:
             if ";" in result:
                 result = result.split(";")[0] + ";"
             
-            # Ensure the query has a LIMIT clause
-            if "LIMIT" not in result.upper():
+            # Ensure the query has a LIMIT clause with the correct value
+            if "LIMIT" in result.upper():
+                # Replace any existing LIMIT with the correct value
+                result = re.sub(r"LIMIT\s+\d+", f"LIMIT {limit}", result, flags=re.IGNORECASE)
+            else:
                 result = result.rstrip(";") + f" LIMIT {limit};"
             
             logger.info(
