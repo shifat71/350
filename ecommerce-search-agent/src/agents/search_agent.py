@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional
 
-from langchain.tools import BaseTool
+from langchain.tools import BaseTool, Tool
 from langchain_core.messages import BaseMessage
 
 from src.agents.base_agent import BaseAgent
@@ -11,6 +11,7 @@ from src.database.postgres import get_db
 from src.database.redis_client import get_cache, set_cache
 from src.utils.logger import get_logger
 from sqlalchemy import text
+from src.utils.duckduckgo_search import duckduckgo_web_search
 
 logger = get_logger(__name__)
 
@@ -23,9 +24,10 @@ You have access to the following tools:
 2. SQL Generation: Converts structured query understanding into SQL queries
 3. Vector Search: Finds similar products using semantic search
 4. Database Search: Executes SQL queries to find products
+5. Web Search: Use DuckDuckGo to search the web for additional context or information about the query
 
 Follow these steps for each query:
-1. Use Query Understanding to analyze the query
+1. Use Query Understanding to analyze the query (optionally use Web Search for more context)
 2. Generate SQL query based on the understanding
 3. Execute the SQL query to find products
 4. Use Vector Search to find similar products
@@ -39,16 +41,27 @@ Remember to:
 - Suggest related products when appropriate
 - Explain your reasoning when necessary"""
 
+# Add the DuckDuckGo web search tool to the default tools
+web_search_tool = Tool(
+    name="web_search",
+    description="Search the web using DuckDuckGo to get additional context or information about the user's query.",
+    func=lambda query: duckduckgo_web_search(query, max_results=5),
+)
 
 class SearchAgent(BaseAgent):
     """Search agent for finding products based on user queries."""
 
     def __init__(
         self,
-        tools: List[BaseTool],
+        tools: List[BaseTool] = None,
         model_name: str = "gpt-4-turbo-preview",
     ):
         """Initialize the search agent."""
+        # Add web_search_tool to the tools list if not present
+        if tools is None:
+            tools = [web_search_tool]
+        else:
+            tools = tools + [web_search_tool]
         super().__init__(tools, SEARCH_AGENT_PROMPT, model_name)
         self.query_understanding = QueryUnderstandingChain(model_name)
         self.sql_generation = SQLGenerationChain(model_name)
@@ -61,6 +74,7 @@ class SearchAgent(BaseAgent):
     ) -> Dict:
         """Search for products based on the query."""
         try:
+            logger.info(f"Starting search for query: {query}")
             # Check cache first
             cache_key = f"search:{query}:{limit}"
             cached_result = await get_cache(cache_key)
@@ -68,17 +82,27 @@ class SearchAgent(BaseAgent):
                 logger.info("Returning cached search results", query=query)
                 return cached_result
 
-            # Understand the query
+            # Optionally use web search for more context
+            logger.info(f"Performing web search for query understanding: {query}")
+            web_results = duckduckgo_web_search(query, max_results=3)
+            logger.info(f"Web search results: {web_results}")
+
+            # Understand the query (pass web results as context)
+            query_context = query + "\nWeb context:\n" + "\n".join([r["title"] + ": " + (r["body"] or "") for r in web_results])
+            logger.info(f"Running query understanding with context: {query_context}")
             query_understanding = await self.query_understanding.run(
-                query,
+                query_context,
                 chat_history,
             )
+            logger.info(f"Query understanding result: {query_understanding}")
 
             # Generate SQL query
+            logger.info(f"Generating SQL for: {query_understanding}")
             sql_query = await self.sql_generation.run(
                 query_understanding,
                 limit,
             )
+            logger.info(f"Generated SQL: {sql_query}")
 
             # Extract parameters from query_understanding
             parameters = {
@@ -94,20 +118,42 @@ class SearchAgent(BaseAgent):
                     parameters[key] = f"%{features[i]}%"
                 else:
                     parameters[key] = "%%"  # wildcard if not enough features
+            # Always include min_price and max_price if price_range is present
+            price_range = query_understanding.get("price_range", {})
+            min_price = price_range.get("min") if price_range else None
+            max_price = price_range.get("max") if price_range else None
+            parameters["min_price"] = min_price
+            parameters["max_price"] = max_price
+
+            # Add constraints as parameters (constraint1, constraint2, ...)
+            constraints = query_understanding.get("constraints", [])
+            # The SQL may expect up to 3 constraints; support up to 3
+            for i in range(3):
+                key = f"constraint{i+1}" if len(constraints) > 1 else "constraint"
+                if i < len(constraints):
+                    parameters[key] = f"%{constraints[i]}%"
+                else:
+                    parameters[key] = "%%"  # wildcard if not enough constraints
+            logger.info(f"SQL parameters: {parameters}")
 
             # Execute SQL query
+            logger.info(f"Executing SQL query: {sql_query} with parameters: {parameters}")
             async with get_db() as db:
                 result = await db.execute(text(sql_query), parameters)
                 products = result.fetchall()
+            logger.info(f"SQL query returned {len(products)} products")
 
             # Perform vector search with limit
+            logger.info(f"Performing vector search for: {query}")
             vector_results = await search_similar_products(
                 query,
                 n_results=limit,
             )
+            logger.info(f"Vector search returned {len(vector_results)} results")
 
             # Combine and rank results
             combined_results = self._combine_results(products, vector_results, limit)
+            logger.info(f"Combined results: {combined_results}")
 
             # Cache the results
             await set_cache(cache_key, combined_results)
