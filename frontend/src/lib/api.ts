@@ -1,5 +1,11 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
+// Debug log to check if environment variable is loaded
+if (typeof window !== 'undefined') {
+  console.log('NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
+  console.log('API_BASE_URL:', API_BASE_URL);
+}
+
 export const api = {
   // Products
   getProducts: async (params?: {

@@ -1,6 +1,10 @@
+import dotenv from 'dotenv';
+
+// Load environment variables first
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import productsRouter from './routes/products';
 import categoriesRouter from './routes/categories';
@@ -13,8 +17,6 @@ import userProfileRouter from './routes/user-profile';
 import reviewsRouter from './routes/reviews';
 import uploadRouter from './routes/upload';
 import favoritesRouter from './routes/favorites';
-
-dotenv.config();
 
 const app = express();
 const prisma = new PrismaClient();

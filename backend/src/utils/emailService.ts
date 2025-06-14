@@ -3,11 +3,24 @@ import FormData from 'form-data';
 
 const mailgun = new Mailgun(FormData);
 
-// Initialize Mailgun client
-const mg = mailgun.client({
-  username: 'api',
-  key: process.env.MAILGUN_API_KEY || '',
-});
+// Lazy-load the Mailgun client to ensure environment variables are loaded
+let mg: ReturnType<typeof mailgun.client> | null = null;
+
+const getMailgunClient = () => {
+  if (!mg) {
+    const MAILGUN_API_KEY = process.env.MAILGUN_API_KEY;
+    
+    if (!MAILGUN_API_KEY) {
+      throw new Error('MAILGUN_API_KEY environment variable is required');
+    }
+
+    mg = mailgun.client({
+      username: 'api',
+      key: MAILGUN_API_KEY,
+    });
+  }
+  return mg;
+};
 
 const DOMAIN = process.env.MAILGUN_DOMAIN || '';
 const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@yourdomain.com';
@@ -18,6 +31,10 @@ export const sendVerificationEmail = async (
   verificationToken: string
 ) => {
   try {
+    if (!DOMAIN) {
+      throw new Error('MAILGUN_DOMAIN environment variable is required');
+    }
+
     const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
     
     const emailData = {
@@ -134,7 +151,8 @@ export const sendVerificationEmail = async (
       `
     };
 
-    const response = await mg.messages.create(DOMAIN, emailData);
+    const mailgunClient = getMailgunClient();
+    const response = await mailgunClient.messages.create(DOMAIN, emailData);
     console.log('Verification email sent successfully:', response);
     return response;
 
@@ -146,6 +164,10 @@ export const sendVerificationEmail = async (
 
 export const sendWelcomeEmail = async (email: string, firstName: string) => {
   try {
+    if (!DOMAIN) {
+      throw new Error('MAILGUN_DOMAIN environment variable is required');
+    }
+
     const emailData = {
       from: FROM_EMAIL,
       to: email,
@@ -252,7 +274,8 @@ export const sendWelcomeEmail = async (email: string, firstName: string) => {
       `
     };
 
-    const response = await mg.messages.create(DOMAIN, emailData);
+    const mailgunClient = getMailgunClient();
+    const response = await mailgunClient.messages.create(DOMAIN, emailData);
     console.log('Welcome email sent successfully:', response);
     return response;
 

@@ -40,6 +40,11 @@ export default function VerifyEmailPage() {
       }
 
       try {
+        console.log('Environment check:', {
+          NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+          constructedUrl: `${process.env.NEXT_PUBLIC_API_URL}/customer-auth/verify-email?token=${token}`
+        });
+        
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/customer-auth/verify-email?token=${token}`);
         const data: VerificationResponse = await response.json();
 
