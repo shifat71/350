@@ -8,6 +8,7 @@ import { Product } from "@/types";
 import api from "@/lib/api";
 import Header from "@/components/Header";
 import ProductCard from "@/components/ProductCard";
+import SearchInput from "@/components/SearchInput";
 
 export default function Home() {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
@@ -45,7 +46,16 @@ export default function Home() {
               Shop the latest trends and find everything you need in one place. 
               Quality products, competitive prices, and exceptional service.
             </p>
-            <div className="mt-10">
+            
+            {/* Search Input */}
+            <div className="mt-10 max-w-2xl mx-auto">
+              <SearchInput 
+                placeholder="Search for products or upload an image..."
+                className="mb-6"
+              />
+            </div>
+            
+            <div className="mt-6">
               <Link
                 href="/products"
                 className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"

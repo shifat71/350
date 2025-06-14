@@ -211,3 +211,38 @@ export interface CreateReviewData {
   title: string;
   comment: string;
 }
+
+// AI Search Types
+export interface SearchProduct {
+  id: number;  // Changed from string to number to match backend
+  name: string;
+  description: string;
+  price: string;
+  originalPrice?: string;
+  image: string;  // Changed from image_url to image to match backend
+  images?: string[];
+  rating?: number;
+  reviews?: number;
+  inStock?: boolean;
+  stock?: number;
+  features?: string[];
+  specifications?: any;
+  category_name: string;
+  score: number;
+}
+
+export interface SearchResponse {
+  products: SearchProduct[];
+  total: number;
+}
+
+export interface TextSearchRequest {
+  query: string;
+  limit?: number;
+}
+
+export interface ImageSearchRequest {
+  image_base64: string;
+  query?: string;
+  limit?: number;
+}

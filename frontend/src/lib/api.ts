@@ -1,3 +1,5 @@
+import { SearchResponse } from '@/types';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 // Debug log to check if environment variable is loaded
@@ -829,6 +831,48 @@ export const api = {
       if (!response.ok) throw new Error('Failed to get favorites count');
       return response.json();
     },
+  },
+
+  // AI Search functionality
+  search: {
+    textSearch: async (query: string, limit: number = 5): Promise<SearchResponse> => {
+      const response = await fetch('http://localhost:9000/search/text', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query,
+          limit
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Text search failed: ${response.status}`);
+      }
+      
+      return response.json();
+    },
+
+    imageSearch: async (imageBase64: string, query: string = '', limit: number = 5): Promise<SearchResponse> => {
+      const response = await fetch('http://localhost:9000/search/image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image_base64: imageBase64,
+          query,
+          limit
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Image search failed: ${response.status}`);
+      }
+      
+      return response.json();
+    }
   },
 };
 
