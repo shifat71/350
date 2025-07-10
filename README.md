@@ -1,10 +1,7 @@
 # E-commerce Platform with AI-Powered Search
 
 A modern, full-stack e-commerce platform featuring an AI-powered search and recommendation system. Built with Next.js, Node.js/Express, and Python FastAPI, integrating natural language processing, image search capabilities, and intelligent product recommendations.
-
-**🔄 UPDATED: Now integrated with backend database!**
-
-The search agent now uses the same PostgreSQL database as the backend, ensuring consistent product data between search results and product pages.
+ 
 
 ## 🚀 Features
 
@@ -489,7 +486,5 @@ python scripts/test_chromadb_direct.py
 This project is licensed under the ISC License.
 
 ## 🔗 Related Documentation
-
-- [Backend API Documentation](./backend/README.md)
-- [Search Agent Documentation](./ecommerce-search-agent/README.md)
-- [Frontend Documentation](./frontend/README.md)
+ 
+- [Search Agent Documentation](./ecommerce-search-agent/README.md) 
